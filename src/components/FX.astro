@@ -1,0 +1,88 @@
+---
+/* Drop this once (after <Nav />). Adds reveal, tilt, scroll-spy, THEME + PARALLAX. */
+---
+<script>
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Reveal on view ---------- */
+  if (!reduce) {
+    const els = document.querySelectorAll("[data-reveal]");
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) { e.target.classList.add("in-view"); io.unobserve(e.target); }
+      }
+    }, { threshold: 0.12 });
+    els.forEach((el) => io.observe(el));
+  } else {
+    document.querySelectorAll("[data-reveal]").forEach(el => el.classList.add("in-view"));
+  }
+
+  /* ---------- Tilt ---------- */
+  if (!reduce) {
+    const maxDeg = 6, clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
+    document.querySelectorAll("[data-tilt]").forEach((card) => {
+      let raf = 0;
+      const update = (e) => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        const rx = clamp(-py * maxDeg, -maxDeg, maxDeg);
+        const ry = clamp(px * maxDeg, -maxDeg, maxDeg);
+        card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
+      };
+      const reset = () => card.style.transform = "perspective(1000px) rotateX(0) rotateY(0) translateZ(0)";
+      card.addEventListener("pointermove", (e) => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => update(e)); });
+      card.addEventListener("pointerleave", () => { cancelAnimationFrame(raf); reset(); });
+    });
+  }
+
+  /* ---------- Scroll-spy (nav highlight) ---------- */
+  const links = [...document.querySelectorAll('a.nav-link[href^="#"]')];
+  const targets = links.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  if (targets.length) {
+    const spy = new IntersectionObserver((entries) => {
+      const visible = entries.filter(e => e.isIntersecting).sort((a,b)=> b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const id = "#" + visible.target.id;
+      links.forEach(a => a.setAttribute("aria-current", a.getAttribute("href") === id ? "true" : "false"));
+    }, { rootMargin: "-40% 0px -55% 0px", threshold: [0,.25,.5,.75,1] });
+    targets.forEach(t => spy.observe(t));
+  }
+
+  /* ---------- Background THEME per section ---------- */
+  const themedSections = document.querySelectorAll("[data-bg]");
+  const setTheme = (val) => document.body.setAttribute("data-theme", val || "hero");
+  if (themedSections.length) {
+    // initial
+    const first = themedSections[0].getAttribute("data-bg");
+    setTheme(first);
+    // observer
+    const themeObs = new IntersectionObserver((entries) => {
+      const top = entries.filter(e => e.isIntersecting).sort((a,b)=> b.intersectionRatio - a.intersectionRatio)[0];
+      if (!top) return;
+      const v = top.target.getAttribute("data-bg");
+      setTheme(v);
+    }, { rootMargin: "-40% 0px -55% 0px", threshold: [0,.2,.5,.8,1] });
+    themedSections.forEach(s => themeObs.observe(s));
+  }
+
+  /* ---------- Parallax shimmer (CSS vars) ---------- */
+  if (!reduce) {
+    let raf = 0, lastX = 0.5;
+    const update = () => {
+      const maxY = 30; // px
+      const maxX = 20; // px
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - innerHeight || 1;
+      const p = Math.max(0, Math.min(1, scrollY / max));
+      const y = (p - 0.5) * 2 * maxY;       // -maxY .. +maxY
+      const x = (lastX - 0.5) * 2 * maxX;   // pointer-based
+      document.body.style.setProperty("--bg-shift-y", y.toFixed(2) + "px");
+      document.body.style.setProperty("--bg-shift-x", x.toFixed(2) + "px");
+      raf = 0;
+    };
+    addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    addEventListener("pointermove", (e) => { lastX = e.clientX / innerWidth; if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    update();
+  }
+</script>

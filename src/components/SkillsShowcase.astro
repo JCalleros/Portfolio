@@ -1,0 +1,212 @@
+---
+/**
+ * Animated skills section:
+ * - Orbit (two rings of icons)
+ * - Grid of categorized skill chips
+ * Motion respects `prefers-reduced-motion`.
+ */
+type Item = { label: string; icon: string };
+const ringA: Item[] = [
+  { label: "React", icon: "⚛️" },
+  { label: "Python", icon: "🐍" },
+  { label: "Django", icon: "🧩" },
+  { label: "AWS", icon: "☁️" },
+  { label: "Docker", icon: "🐳" },
+  { label: "Postgres", icon: "🐘" },
+];
+
+const ringB: Item[] = [
+  { label: "Git", icon: "🌿" },
+  { label: "Linux", icon: "🐧" },
+  { label: "Tailwind", icon: "💨" },
+  { label: "Next.js", icon: "⏭️" },
+  { label: "Node.js", icon: "🟢" },
+];
+
+const groups: { title: string; items: Item[] }[] = [
+  {
+    title: "Languages",
+    items: [
+      { label: "Python", icon: "🐍" },
+      { label: "TypeScript", icon: "🔷" },
+      { label: "JavaScript", icon: "🟨" },
+      { label: "SQL", icon: "🧾" },
+      { label: "Bash", icon: "💻" },
+    ],
+  },
+  {
+    title: "Frameworks",
+    items: [
+      { label: "Django", icon: "🧩" },
+      { label: "Django REST", icon: "🛰️" },
+      { label: "React", icon: "⚛️" },
+      { label: "Next.js", icon: "⏭️" },
+      { label: "Tailwind", icon: "💨" },
+    ],
+  },
+  {
+    title: "Cloud & DevOps",
+    items: [
+      { label: "AWS", icon: "☁️" },
+      { label: "Docker", icon: "🐳" },
+      { label: "CI/CD", icon: "🔁" },
+      { label: "Nginx", icon: "🧭" },
+      { label: "Vercel", icon: "▲" },
+    ],
+  },
+  {
+    title: "Data",
+    items: [
+      { label: "Postgres", icon: "🐘" },
+      { label: "Redis", icon: "🧠" },
+      { label: "Pandas", icon: "🐼" },
+    ],
+  },
+  {
+    title: "Testing & QA",
+    items: [
+      { label: "PyTest", icon: "🧪" },
+      { label: "Jest", icon: "🃏" },
+      { label: "Automation", icon: "🤖" },
+    ],
+  },
+  {
+    title: "Tooling",
+    items: [
+      { label: "Git", icon: "🌿" },
+      { label: "Linux", icon: "🐧" },
+      { label: "VS Code", icon: "🧰" },
+      { label: "Postman", icon: "📮" },
+    ],
+  },
+];
+---
+<div class="grid items-center gap-8 md:grid-cols-2">
+  <!-- Orbit -->
+  <div class="reveal order-1 md:order-2" data-reveal>
+    <div class="skill-orbit">
+      <!-- glow base -->
+      <div class="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,_rgba(255,255,255,.06),_transparent_65%)]"></div>
+
+      <!-- inner ring -->
+      <ul class="ring orbit-spin reverse" style="--radius: 6.5rem">
+        {ringA.map((s, i) => (
+          <li style={`--i:${i}; --count:${ringA.length}`}>
+            <button class="node" title={s.label} aria-label={s.label}>
+              <span class="ico">{s.icon}</span>
+              <span class="sr-only">{s.label}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <!-- outer ring -->
+      <ul class="ring orbit-spin" style="--radius: 9.5rem; animation-duration: 65s;">
+        {ringB.map((s, i) => (
+          <li style={`--i:${i}; --count:${ringB.length}`}>
+            <button class="node" title={s.label} aria-label={s.label}>
+              <span class="ico">{s.icon}</span>
+              <span class="sr-only">{s.label}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <!-- center -->
+      <div class="center">
+        <div class="center-glow"></div>
+        <span class="center-label">Full-Stack</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="reveal order-2 md:order-1" data-reveal>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {groups.map((g) => (
+        <section class="card p-4 skill-card" data-tilt>
+          <h3 class="text-sm font-semibold opacity-90">{g.title}</h3>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {g.items.map((it) => (
+              <li>
+                <span class="skill-chip">
+                  <span class="dot" aria-hidden="true">{it.icon}</span>
+                  {it.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .skill-orbit {
+    position: relative;
+    width: 22rem; height: 22rem;
+    margin-inline: auto;
+  }
+  .skill-orbit .ring {
+    position: absolute; inset: 0;
+    list-style: none; margin: 0; padding: 0;
+  }
+  .skill-orbit .ring li {
+    --angle: calc(360deg/var(--count) * var(--i));
+    position: absolute; left: 50%; top: 50%;
+    transform: rotate(var(--angle)) translate(var(--radius)) rotate(calc(-1 * var(--angle)));
+    transform-origin: center;
+  }
+  .skill-orbit .center {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+  }
+  .skill-orbit .center-label {
+    position: relative; z-index: 2;
+    font-weight: 600; opacity: .9;
+  }
+  .skill-orbit .center-glow {
+    position: absolute; width: 9.5rem; height: 9.5rem; border-radius: 9999px;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,.12), transparent 60%),
+      radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--aurora-a) 35%, transparent), transparent 70%);
+    filter: blur(20px); opacity: .8;
+  }
+  .node {
+    display: grid; place-items: center;
+    width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+    background: color-mix(in oklab, var(--aurora-a) 20%, rgba(255,255,255,.06));
+    border: 1px solid rgba(255,255,255,.15);
+    box-shadow: 0 6px 18px rgba(0,0,0,.25), inset 0 0 24px rgba(255,255,255,.06);
+    transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    will-change: transform;
+  }
+  .node:hover { transform: translateY(-3px) scale(1.06); box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 0 28px rgba(255,255,255,.10); }
+  .node .ico { font-size: 1rem; line-height: 1; }
+  .skill-card { transition: transform .25s ease, box-shadow .25s ease; }
+  .skill-chip {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .4rem .7rem; border-radius: 9999px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.12);
+    font-size: .8rem; letter-spacing: .01em;
+    transition: transform .2s ease, background .2s ease, border-color .2s ease;
+  }
+  .skill-chip:hover { transform: translateY(-2px); background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.2); }
+  .skill-chip .dot {
+    display: grid; place-items: center;
+    width: 1.35rem; height: 1.35rem; border-radius: 9999px;
+    background: linear-gradient(180deg, color-mix(in oklab, var(--aurora-a) 35%, transparent), rgba(255,255,255,.04));
+    border: 1px solid rgba(255,255,255,.2);
+    box-shadow: inset 0 0 18px rgba(255,255,255,.08);
+    font-size: .9rem;
+  }
+
+  /* Motion helpers (disabled when reduced-motion) */
+  @media (prefers-reduced-motion: no-preference) {
+    .orbit-spin { animation: orbit-rotate 58s linear infinite; }
+    .orbit-spin.reverse { animation-direction: reverse; }
+  }
+  @keyframes orbit-rotate { to { transform: rotate(360deg); } }
+</style>

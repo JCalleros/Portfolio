@@ -1,0 +1,53 @@
+---
+type Metric = { value: number; suffix?: string; label: string };
+const { items = [] } = Astro.props as { items: Metric[] };
+---
+<section class="container-x section-pad reveal" data-reveal>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
+    {items.map((m, i) => (
+      <div class="card group relative overflow-hidden p-5 md:p-6">
+        <div class="pointer-events-none absolute -inset-20 bg-[radial-gradient(circle_at_var(--x,50%)_var(--y,50%),_rgba(59,130,246,.18),_transparent_55%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+        <div class="text-3xl md:text-4xl font-semibold tracking-tight">
+          <span class="counter tabular-nums" data-target={m.value} data-i={i}>0</span>
+          {m.suffix ? <span class="opacity-70 ms-0.5">{m.suffix}</span> : null}
+        </div>
+        <p class="mt-1 text-sm opacity-80">{m.label}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  // Fancy hover light
+  document.currentScript?.parentElement?.addEventListener("pointermove", (e) => {
+    const el = (e.target as HTMLElement).closest(".group") as HTMLElement | null;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--x", `${((e.clientX - rect.left) / rect.width) * 100}%`);
+    el.style.setProperty("--y", `${((e.clientY - rect.top) / rect.height) * 100}%`);
+  });
+
+  // Count-up on reveal
+  const counters = Array.from(document.querySelectorAll<HTMLSpanElement>(".counter"));
+  const seen = new Set<number>();
+  const io = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const el = entry.target as HTMLSpanElement;
+      const idx = Number(el.dataset.i || 0);
+      if (seen.has(idx)) continue;
+      seen.add(idx);
+      const target = Number(el.dataset.target || 0);
+      const dur = 900 + Math.random() * 600;
+      const t0 = performance.now();
+      const step = (t: number) => {
+        const p = Math.min(1, (t - t0) / dur);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * ease).toString();
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+  }, { threshold: 0.35 });
+  counters.forEach(c => io.observe(c));
+</script>

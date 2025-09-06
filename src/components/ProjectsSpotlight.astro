@@ -1,0 +1,161 @@
+---
+interface Project {
+  slug?: string;
+  title: string;
+  summary: string;
+  image: string;
+  tags?: string[];
+}
+const { items = [] } = Astro.props as { items: Project[] };
+
+const toSlug = (s: string) =>
+  s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+const safe = items.map(p => ({
+  ...p,
+  slug: p.slug ?? toSlug(p.title),
+  tags: p.tags ?? [],
+}));
+---
+<div class="grid gap-8 md:grid-cols-[0.9fr_1.6fr] items-start">
+  <!-- Sticky bullets / table of contents -->
+  <aside class="hidden md:block sticky top-24 self-start">
+    <ul id="proj-toc" class="space-y-2">
+      {safe.map((p, i) => (
+        <li>
+          <button
+            class={"w-full text-left rounded-md px-3 py-2 hover:bg-white/5 transition " + (i === 0 ? "ring-1 ring-[--color-accent]/40 bg-white/5" : "opacity-90")}
+            data-index={i}
+            aria-current={i === 0 ? "true" : "false"}
+          >
+            <span class="mr-2 inline-block size-2 rounded-full align-middle"
+                  style={"background: " + (i === 0 ? "var(--color-accent)" : "rgba(255,255,255,.4)")}></span>
+            <span class="align-middle">{p.title}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </aside>
+
+  <!-- Spotlight stage -->
+  <div class="relative min-w-0">
+    <div
+      id="spotlight"
+      class="h-[75vh] md:h-[80vh] overflow-y-auto overflow-x-hidden no-scrollbar
+             snap-y snap-mandatory rounded-[--radius-2xl] ring-1 ring-white/10
+             bg-white/[.02] overscroll-contain"
+    >
+      {safe.map((p, i) => (
+        <section
+          class={"snap-center p-4 sm:p-6 lg:p-8 min-h-[75vh] md:min-h-[80vh] flex flex-col gap-6 " + (i === 0 ? "is-active" : "")}
+          data-index={i}
+          role="group"
+          aria-label={p.title}
+          style="scroll-margin-block: 10vh;"
+        >
+          <figure class="relative media-frame grow overflow-hidden">
+            <img
+              src={p.image}
+              alt={`${p.title} screenshot`}
+              class="absolute inset-0 h-full w-full object-contain p-3 will-change-transform"
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding="async"
+            />
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,_rgba(255,255,255,.06),_transparent_60%)]"></div>
+          </figure>
+
+          <div class="card p-5 flex flex-col gap-3">
+            <div>
+              <h3 class="text-xl font-semibold">{p.title}</h3>
+              <p class="mt-1 text-sm/6 opacity-90">{p.summary}</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              {p.tags!.slice(0, 5).map(t => <span class="tag">{t}</span>)}
+              {p.tags!.length > 5 && <span class="tag">+ {p.tags!.length - 5} more</span>}
+            </div>
+
+            <div class="mt-2 border-t border-white/10 pt-3 flex items-center gap-3">
+              <a href={`/projects/${p.slug}`} class="btn btn-ghost">View case study →</a>
+              <button type="button" class="btn btn-ghost js-open-project" data-slug={p.slug}>Quick view</button>
+            </div>
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <!-- edge mask to hint scroll -->
+    <div class="pointer-events-none absolute inset-0 rounded-[--radius-2xl]"
+         style="mask-image: linear-gradient(to bottom, transparent, #000 24px, #000 calc(100% - 24px), transparent);"></div>
+  </div>
+</div>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stage = document.getElementById('spotlight');
+  const sections = [...stage.querySelectorAll('section[data-index]')];
+  const toc = document.getElementById('proj-toc');
+  const bullets = toc ? [...toc.querySelectorAll('button[data-index]')] : [];
+
+  // utility: set active visuals immediately
+  function setActive(i) {
+    sections.forEach((s, idx) => s.classList.toggle('is-active', idx === i));
+    bullets.forEach((b, idx) => {
+      const on = idx === i;
+      b.setAttribute('aria-current', on ? 'true' : 'false');
+      b.classList.toggle('ring-1', on);
+      b.classList.toggle('ring-[--color-accent]/40', on);
+      b.classList.toggle('bg-white/5', on);
+    });
+  }
+
+  // Scroll to section when clicking a bullet (centered so title card is visible)
+  bullets.forEach(b => b.addEventListener('click', () => {
+    const i = Number(b.getAttribute('data-index'));
+    setActive(i); // instant highlight feedback
+    sections[i]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }));
+
+  // Active state sync + subtle zoom for current slide (IO)
+  let active = 0;
+  const io = new IntersectionObserver((entries) => {
+    const vis = entries
+      .filter(e => e.isIntersecting)
+      .sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (!vis) return;
+    active = Number(vis.target.getAttribute('data-index'));
+    setActive(active);
+  }, { root: stage, threshold: 0.35 }); // lower threshold so it toggles reliably
+  sections.forEach(s => io.observe(s));
+
+  // Pointer parallax on the active image (subtle, reset on leave)
+  let raf = 0;
+  const move = (e) => {
+    const sec = sections[active];
+    if (!sec) return;
+    const img = sec.querySelector('img');
+    if (!img) return;
+    const r = img.getBoundingClientRect();
+    const dx = ((e.clientX - r.left) / r.width - 0.5);
+    const dy = ((e.clientY - r.top) / r.height - 0.5);
+    const max = 12; // px
+    img.style.transform = reduce ? 'none' : `translate3d(${-dx*max}px, ${-dy*max}px, 0) scale(1.03)`;
+  };
+  const reset = () => {
+    const img = sections[active]?.querySelector('img');
+    if (img) img.style.transform = 'translate3d(0,0,0) scale(1)';
+  };
+
+  if (!reduce) {
+    stage.addEventListener('pointermove', (e) => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => move(e)); });
+    stage.addEventListener('pointerleave', () => { cancelAnimationFrame(raf); reset(); });
+    window.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(reset); }, { passive: true });
+  }
+</script>
+
+<style>
+  /* Emphasize the active section slightly */
+  #spotlight > section { transition: transform .35s cubic-bezier(.2,.7,.3,1), opacity .35s; }
+  #spotlight > section.is-active { transform: scale(1.01); opacity: 1; }
+  #spotlight > section:not(.is-active) { opacity: .96; }
+</style>

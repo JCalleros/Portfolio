@@ -1,0 +1,240 @@
+---
+/** Props: projects: Array<{slug,title,summary,image,tags,links?,metrics?,body?}> */
+const { projects = [] } = Astro.props;
+---
+<div id="projects-modal" class="fixed inset-0 z-[70] hidden" aria-hidden="true">
+  <!-- Backdrop -->
+  <div data-backdrop class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity"></div>
+
+  <!-- Panel -->
+  <div class="pointer-events-none absolute inset-0 flex p-4 md:p-8">
+    <div
+      data-panel
+      class="pointer-events-auto relative mx-auto my-auto w-full max-w-5xl overflow-hidden rounded-2xl bg-[--color-bg] ring-1 ring-white/10 shadow-xl opacity-0 scale-95 transition will-change-transform"
+    >
+      <button
+        data-close
+        class="absolute right-3 top-3 rounded-full bg-white/10 px-2.5 py-1 text-sm hover:bg-white/15"
+        aria-label="Close projects"
+      >Esc</button>
+
+      <!-- LIST VIEW -->
+      <div data-view="list" class="max-h-[80svh] overflow-auto">
+        <header class="p-5 pb-2 sticky top-0 bg-[--color-bg]/95 backdrop-blur">
+          <h2 class="text-xl font-semibold">All projects</h2>
+          <p class="opacity-80 text-sm">Click any card to see details.</p>
+        </header>
+
+        <div class="p-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((p) => (
+            <a
+              href="#projects"
+              class="card overflow-hidden hover:ring-white/10"
+              data-open-detail
+              data-slug={p.slug}
+              aria-label={`View ${p.title} details`}
+            >
+              <img src={p.image} alt={`${p.title} preview`} class="aspect-[16/10] w-full object-cover" loading="lazy" />
+              <div class="p-4">
+                <h3 class="font-semibold">{p.title}</h3>
+                <p class="mt-1 text-xs/5 opacity-80 line-clamp-2">{p.summary}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div data-view="detail" class="hidden max-h-[80svh] overflow-auto">
+        <header class="p-5 pb-2 sticky top-0 bg-[--color-bg]/95 backdrop-blur flex items-center justify-between">
+          <div>
+            <h2 id="proj-title" class="text-xl font-semibold"></h2>
+            <p id="proj-summary" class="opacity-80 text-sm mt-1"></p>
+          </div>
+          <button data-back class="rounded-full bg-white/10 px-2.5 py-1 text-sm hover:bg-white/15">← Back</button>
+        </header>
+
+        <div class="p-5">
+          <div class="media-frame aspect-[16/10] md:aspect-[4/3] overflow-hidden">
+            <img id="proj-image" src="" alt="" class="h-full w-full object-contain p-2 bg-white/5" loading="eager" />
+          </div>
+
+          <div id="proj-tags" class="mt-4 flex flex-wrap gap-2"></div>
+          <div id="proj-metrics" class="mt-4 grid grid-cols-2 gap-4"></div>
+          <article id="proj-body" class="mt-4 card p-5 text-sm/7 opacity-90"></article>
+          <div id="proj-links" class="mt-5 flex flex-wrap gap-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Safe JSON payload (escape '<' to avoid accidental tag closes) -->
+<script type="application/json" id="projects-data">
+{JSON.stringify(projects).replace(/</g, "\\u003c")}
+</script>
+
+<script>
+  // Parse the payload safely
+  let DATA = [];
+  try {
+    const el = document.getElementById("projects-data");
+    const raw = (el?.textContent || "").trim();
+    DATA = raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error("Failed to parse projects JSON:", err);
+    DATA = [];
+  }
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const modal = document.getElementById("projects-modal");
+  if (!modal) { console.warn("Projects modal not found."); }
+
+  const backdrop = modal?.querySelector("[data-backdrop]");
+  const panel = modal?.querySelector("[data-panel]");
+  const viewList = modal?.querySelector('[data-view="list"]');
+  const viewDetail = modal?.querySelector('[data-view="detail"]');
+
+  const $ = (sel) => modal?.querySelector(sel);
+  const title = $("#proj-title");
+  const summary = $("#proj-summary");
+  const image = $("#proj-image");
+  const tags = $("#proj-tags");
+  const metrics = $("#proj-metrics");
+  const body = $("#proj-body");
+  const links = $("#proj-links");
+
+  let lastFocus = null;
+
+  const openModal = () => {
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+    if (!reduce) {
+      requestAnimationFrame(() => {
+        backdrop.style.opacity = "1";
+        panel.style.opacity = "1";
+        panel.style.transform = "scale(1)";
+      });
+    } else {
+      backdrop.style.opacity = "1";
+      panel.style.opacity = "1";
+      panel.style.transform = "scale(1)";
+    }
+  };
+
+  const closeModal = () => {
+    if (!modal) return;
+    if (!reduce) {
+      backdrop.style.opacity = "0";
+      panel.style.opacity = "0";
+      panel.style.transform = "scale(.95)";
+      setTimeout(() => {
+        modal.classList.add("hidden");
+        modal.setAttribute("aria-hidden", "true");
+      }, 180);
+    } else {
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+    }
+    if (lastFocus) lastFocus.focus();
+    viewList?.classList.remove("hidden");
+    viewDetail?.classList.add("hidden");
+  };
+
+  const showDetail = (slug) => {
+    if (!modal) return;
+    const p = DATA.find((x) => x.slug === slug);
+    if (!p) return;
+
+    title.textContent = p.title;
+    summary.textContent = p.summary;
+    image.src = p.image;
+    image.alt = p.title + " main screenshot";
+
+    tags.innerHTML = "";
+    p.tags.forEach(t => {
+      const chip = document.createElement("span");
+      chip.className = "tag";
+      chip.textContent = t;
+      tags.appendChild(chip);
+    });
+
+    metrics.innerHTML = "";
+    if (Array.isArray(p.metrics)) {
+      p.metrics.forEach(m => {
+        const dt = document.createElement("div");
+        dt.className = "opacity-80 text-sm";
+        dt.textContent = m.label;
+        const dd = document.createElement("div");
+        dd.className = "text-base font-medium";
+        dd.textContent = m.value;
+        metrics.append(dt, dd);
+      });
+    }
+
+    body.innerHTML = "";
+    if (Array.isArray(p.body) && p.body.length) {
+      p.body.forEach(par => {
+        const el = document.createElement("p");
+        el.textContent = par;
+        body.appendChild(el);
+      });
+    } else {
+      const el = document.createElement("p");
+      el.textContent = "Detailed write-up coming soon.";
+      body.appendChild(el);
+    }
+
+    links.innerHTML = "";
+    if (p.links?.demo) {
+      const a = document.createElement("a");
+      a.href = p.links.demo; a.target = "_blank"; a.rel = "noopener";
+      a.className = "btn btn-primary"; a.textContent = "Live demo";
+      links.appendChild(a);
+    }
+    if (p.links?.repo) {
+      const a = document.createElement("a");
+      a.href = p.links.repo; a.target = "_blank"; a.rel = "noopener";
+      a.className = "btn btn-ghost"; a.textContent = "Source code";
+      links.appendChild(a);
+    }
+
+    viewList?.classList.add("hidden");
+    viewDetail?.classList.remove("hidden");
+  };
+
+  // Global openers: “View all” & “View project”
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest(".js-open-project");
+    const all = e.target.closest(".js-open-all,[data-open='all'],[data-open-all]");
+    if (!el && !all) return;
+
+    e.preventDefault();
+    lastFocus = document.activeElement;
+
+    openModal();
+    if (el) showDetail(el.dataset.slug);
+  });
+
+  // Open from modal list -> detail
+  modal?.addEventListener("click", (e) => {
+    const card = e.target.closest("[data-open-detail]");
+    if (!card) return;
+    e.preventDefault();
+    showDetail(card.dataset.slug);
+  });
+
+  // Close controls
+  modal?.querySelector("[data-close]")?.addEventListener("click", closeModal);
+  modal?.querySelector("[data-back]")?.addEventListener("click", () => {
+    viewDetail?.classList.add("hidden");
+    viewList?.classList.remove("hidden");
+  });
+  backdrop?.addEventListener("click", closeModal);
+  addEventListener("keydown", (e) => {
+    if (!modal || modal.classList.contains("hidden")) return;
+    if (e.key === "Escape") closeModal();
+  });
+</script>

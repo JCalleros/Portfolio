@@ -1,0 +1,140 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+/* Try to load from /src/assets first */
+const headshots = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/**/headshot.{png,jpg,jpeg,webp,avif}",
+  { eager: true }
+);
+const projects = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/**/buildinhub-cover.{png,jpg,jpeg,webp,avif}",
+  { eager: true }
+);
+
+const headshotAsset = Object.values(headshots)[0]?.default;
+const projectAsset  = Object.values(projects)[0]?.default;
+
+const hasAstroAsset = !!(headshotAsset || projectAsset);
+const usesProjectAsset = !headshotAsset && !!projectAsset;
+
+/* Public fallbacks (match your /public paths) */
+const publicHeadshot = "/images/headshot.png";
+const publicProject  = "/images/projects/buildinhub-cover.png";
+---
+<div class="card p-6">
+  <div class="relative media-frame aspect-[16/10] md:aspect-[4/3] max-h-[520px] overflow-hidden" data-hero-visual>
+    <div class="absolute inset-0 skeleton" data-skeleton aria-hidden="true"></div>
+
+    <!-- Spotlight -->
+    <div class="spotlight pointer-events-none" aria-hidden="true"></div>
+
+    {hasAstroAsset ? (
+      <>
+        <Image
+          src={(headshotAsset ?? projectAsset)!}
+          alt={headshotAsset ? "Professional portrait" : "BuildInHUB featured project"}
+          widths={[480, 640, 768, 1024, 1280, 1536]}
+          formats={["avif","webp","jpeg"]}
+          sizes="(min-width: 1024px) 40vw, 100vw"
+          class="h-full w-full object-cover fade-in"
+          loading="eager"
+          decoding="async"
+          onload="this.classList.add('is-loaded'); this.closest('.media-frame').querySelector('[data-skeleton]')?.remove();"
+          placeholder="blur"
+        />
+        {usesProjectAsset && (
+          <div class="pointer-events-none absolute inset-0 flex flex-col justify-between p-4">
+            <div class="flex gap-2">
+              <span class="tag">Django</span>
+              <span class="tag">Next.js</span>
+              <span class="tag">Docker</span>
+            </div>
+            <div class="self-start rounded-full bg-black/50 px-3 py-1 text-xs backdrop-blur">
+              Currently building: <strong>BuildInHUB</strong>
+            </div>
+          </div>
+        )}
+      </>
+    ) : (
+      <>
+        <img
+          id="hero-fallback"
+          src={publicHeadshot}
+          alt="Hero visual"
+          class="absolute inset-0 h-full w-full object-cover fade-in"
+          loading="eager" decoding="async" fetchpriority="high"
+          onload="this.classList.add('is-loaded'); this.closest('.media-frame').querySelector('[data-skeleton]')?.remove();"
+          onerror="
+            if (!this.dataset.swapped) {
+              this.dataset.swapped = '1';
+              this.src = '/images/projects/buildinhub-cover.png';
+            } else {
+              this.remove();
+            }
+          "
+        />
+        <div data-overlay class="pointer-events-none absolute inset-0 hidden flex-col justify-between p-4">
+          <div class="flex gap-2">
+            <span class="tag">Django</span>
+            <span class="tag">Next.js</span>
+            <span class="tag">Docker</span>
+          </div>
+          <div class="self-start rounded-full bg-black/50 px-3 py-1 text-xs backdrop-blur">
+            Currently building: <strong>BuildInHUB</strong>
+          </div>
+        </div>
+        <script>
+          (() => {
+            const root = document.querySelector('[data-hero-visual]');
+            if (!root) return;
+            const img = root.querySelector('#hero-fallback');
+            const skel = root.querySelector('[data-skeleton]');
+            const overlay = root.querySelector('[data-overlay]');
+            if (!img) return;
+            img.addEventListener('load', () => {
+              skel?.remove();
+              if (img.currentSrc.includes('buildinhub-cover')) {
+                overlay?.classList.remove('hidden'); overlay?.classList.add('flex');
+              }
+            });
+          })();
+        </script>
+      </>
+    )}
+
+    <style>
+      /* Soft “spotlight” that follows pointer a bit */
+      .spotlight {
+        position: absolute; inset: -20%;
+        background:
+          radial-gradient(30rem 30rem at var(--sx, 60%) var(--sy, 40%),
+          color-mix(in oklab, var(--aurora-a) 18%, transparent) 0%,
+          transparent 60%);
+        mix-blend-mode: screen;
+        opacity: .35;
+        transition: opacity .3s ease;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .spotlight { display: none; }
+      }
+    </style>
+
+    <script>
+      // Spotlight pointer-follow (small, subtle)
+      const root = document.querySelector('[data-hero-visual]');
+      const spot = root?.querySelector('.spotlight');
+      if (root && spot && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+        root.addEventListener('pointermove', (e) => {
+          const r = root.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width) * 100;
+          const y = ((e.clientY - r.top) / r.height) * 100;
+          spot.style.setProperty('--sx', x.toFixed(2) + '%');
+          spot.style.setProperty('--sy', y.toFixed(2) + '%');
+        });
+        root.addEventListener('pointerenter', () => spot.style.opacity = '.45');
+        root.addEventListener('pointerleave', () => spot.style.opacity = '.35');
+      }
+    </script>
+  </div>
+</div>

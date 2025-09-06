@@ -1,0 +1,9 @@
+# keep Docker contexts tiny
+node_modules
+dist
+.git
+.gitignore
+.vercel
+.vscode
+.DS_Store
+npm-debug.log*

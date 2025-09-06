@@ -1,0 +1,46 @@
+---
+const {
+  slug, title, summary, image,
+  tags = [], metrics = []
+} = Astro.props as any;
+
+const href = `/projects/${slug}`;
+const tagAttr = tags.join(",").toLowerCase();
+const metric = metrics?.[0]; // show one quick stat if available
+---
+<article class="card card-eq group overflow-hidden" data-tags={tagAttr}>
+  <a href={href} aria-label={`Open ${title}`} class="block">
+    <figure class="relative aspect-[16/10] bg-white/5">
+      <img
+        src={image}
+        alt={`${title} preview`}
+        class="absolute inset-0 h-full w-full object-contain p-3 transition-transform duration-300 group-hover:scale-[1.02]"
+        loading="lazy" decoding="async"
+        sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+      />
+      {metric && (
+        <div class="absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs backdrop-blur">
+          {metric.label}: <strong>{metric.value}</strong>
+        </div>
+      )}
+    </figure>
+  </a>
+
+  <div class="p-5 flex flex-col gap-3 flex-1">
+    <div>
+      <h3 class="text-lg font-semibold">
+        <a href={href} class="hover:underline">{title}</a>
+      </h3>
+      <p class="mt-1 text-sm/6 opacity-90 line-clamp-2">{summary}</p>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      {tags.slice(0, 4).map((t: string) => <span class="tag">{t}</span>)}
+      {tags.length > 4 && <span class="tag">+ {tags.length - 4} more</span>}
+    </div>
+
+    <div class="mt-auto border-t border-white/10 pt-3">
+      <a href={href} class="btn btn-ghost">View case study →</a>
+    </div>
+  </div>
+</article>

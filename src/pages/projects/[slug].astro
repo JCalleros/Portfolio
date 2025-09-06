@@ -1,0 +1,274 @@
+---
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import ScrollProgress from "../../components/ScrollProgress.astro";
+import FX from "../../components/FX.astro";
+import projects from "../../data/projects";
+
+export const prerender = false; // server render so new slugs work immediately
+
+type Metric = { label: string; value: string };
+type Linkset = { demo?: string; repo?: string; docs?: string };
+type Section = { title: string; body: string[] };
+type Overview = { problem?: string; solution?: string; outcome?: string };
+
+type Project = {
+  slug?: string;
+  title: string;
+  summary: string;
+  image: string;           // hero
+  gallery?: string[];      // extra screenshots
+  tags?: string[];
+  links?: Linkset;
+  metrics?: Metric[];
+  body?: string[];         // legacy write-up
+  sections?: Section[];    // richer write-up (preferred)
+  overview?: Overview;     // Problem / Solution / Outcome
+  meta?: { role?: string; year?: string; team?: string; duration?: string };
+};
+
+const toSlug = (s: string) =>
+  s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+// normalize
+const list = (projects as Project[]).map((p) => ({
+  ...p,
+  slug: p.slug ?? toSlug(p.title),
+  gallery: p.gallery ?? [],
+  tags: p.tags ?? [],
+  metrics: p.metrics ?? [],
+  links: p.links ?? {},
+  overview: p.overview ?? {},
+  meta: p.meta ?? {},
+}));
+
+const { slug } = Astro.params;
+const idx = list.findIndex((p) => p.slug === slug);
+const proj = idx >= 0 ? list[idx] : undefined;
+const prev = idx > 0 ? list[idx - 1] : undefined;
+const next = idx >= 0 && idx < list.length - 1 ? list[idx + 1] : undefined;
+
+const is404 = !proj;
+if (is404) Astro.response.status = 404;
+---
+<Base>
+  <a id="top"></a>
+  <Nav />
+  <ScrollProgress />
+  <FX />
+
+  {is404 ? (
+    <section class="section">
+      <div class="card p-8 text-center">
+        <h1 class="text-2xl font-semibold">Project not found</h1>
+        <p class="mt-2 opacity-80">The project you’re looking for doesn’t exist or was removed.</p>
+        <a class="mt-6 inline-flex btn btn-ghost" href="/projects">← Back to projects</a>
+      </div>
+    </section>
+  ) : (
+    <>
+      <!-- HERO -->
+      <section class="section" data-bg="projects">
+        <div class="reveal" data-reveal>
+          <nav class="text-sm opacity-80">
+            <a class="underline" href="/projects">Projects</a> <span> / </span>
+            <span class="opacity-70">{proj!.title}</span>
+          </nav>
+
+          <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 class="text-3xl md:text-4xl font-bold tracking-tight">{proj!.title}</h1>
+              <p class="mt-2 max-w-2xl opacity-90">{proj!.summary}</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                {proj!.tags!.map((t) => <span class="tag">{t}</span>)}
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              {proj!.links?.demo && <a class="btn btn-primary" href={proj!.links.demo} target="_blank" rel="noopener">Live demo</a>}
+              {proj!.links?.repo && <a class="btn btn-ghost" href={proj!.links.repo} target="_blank" rel="noopener">Source code</a>}
+              <button class="btn btn-ghost" id="copy-link">Copy link</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Media: hero + carousel -->
+        <div class="reveal mt-8" data-reveal>
+          <div class="card overflow-hidden">
+            <div class="grid gap-0 lg:grid-cols-[1.6fr_1fr]">
+              <!-- main media frame -->
+              <figure class="relative aspect-[16/10] bg-white/5 media-frame">
+                <img id="main-media" src={proj!.image} alt={`${proj!.title} screenshot`} class="absolute inset-0 h-full w-full object-contain p-3" loading="eager" decoding="async" />
+              </figure>
+
+              <!-- thumb rail -->
+              <div class="p-3 lg:p-4">
+                <div id="thumbs" class="scrollbar-none grid grid-flow-col auto-cols-[9rem] gap-3 overflow-x-auto lg:grid-flow-row lg:auto-rows-[5.25rem] lg:overflow-x-visible lg:overflow-y-auto">
+                  <button class="thumb is-active" data-src={proj!.image} aria-label="Main image">
+                    <img src={proj!.image} alt="" loading="lazy" decoding="async" />
+                  </button>
+                  {proj!.gallery!.map((src) => (
+                    <button class="thumb" data-src={src} aria-label="Screenshot">
+                      <img src={src} alt="" loading="lazy" decoding="async" />
+                    </button>
+                  ))}
+                </div>
+                <p class="mt-3 text-xs opacity-70">Scroll or drag the thumbnails • Click to preview</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUICK FACTS + WRITE-UP -->
+      <section class="section">
+        <div class="grid gap-8 lg:grid-cols-[1fr_1.25fr] items-start">
+          <!-- Sticky facts -->
+          <aside class="reveal space-y-4 lg:sticky lg:top-24" data-reveal>
+            <div class="card p-5">
+              <h2 class="text-lg font-semibold">Quick facts</h2>
+              <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                {proj!.meta?.role && (<><dt class="opacity-70">Role</dt><dd class="font-medium">{proj!.meta.role}</dd></>)}
+                {proj!.meta?.team && (<><dt class="opacity-70">Team</dt><dd class="font-medium">{proj!.meta.team}</dd></>)}
+                {proj!.meta?.duration && (<><dt class="opacity-70">Duration</dt><dd class="font-medium">{proj!.meta.duration}</dd></>)}
+                {proj!.meta?.year && (<><dt class="opacity-70">Year</dt><dd class="font-medium">{proj!.meta.year}</dd></>)}
+              </dl>
+
+              {proj!.metrics && proj!.metrics.length > 0 && (
+                <>
+                  <h3 class="mt-5 text-sm font-semibold opacity-90">Highlights</h3>
+                  <ul class="mt-2 space-y-1.5 text-sm">
+                    {proj!.metrics!.map((m) => <li>• <span class="opacity-80">{m.label}:</span> <strong>{m.value}</strong></li>)}
+                  </ul>
+                </>
+              )}
+            </div>
+
+            {proj!.links?.docs && (
+              <a class="btn btn-ghost w-full justify-center" href={proj!.links.docs} target="_blank" rel="noopener">Read documentation</a>
+            )}
+          </aside>
+
+          <!-- Case study body -->
+          <div class="space-y-8">
+            <!-- Overview trio -->
+            {(proj!.overview?.problem || proj!.overview?.solution || proj!.overview?.outcome) && (
+              <div class="reveal grid gap-4 md:grid-cols-3" data-reveal>
+                {proj!.overview?.problem && (
+                  <div class="card p-5">
+                    <h3 class="text-sm font-semibold flex items-center gap-2">🚩 Problem</h3>
+                    <p class="mt-2 text-sm/6 opacity-90">{proj!.overview.problem}</p>
+                  </div>
+                )}
+                {proj!.overview?.solution && (
+                  <div class="card p-5">
+                    <h3 class="text-sm font-semibold flex items-center gap-2">🛠️ Solution</h3>
+                    <p class="mt-2 text-sm/6 opacity-90">{proj!.overview.solution}</p>
+                  </div>
+                )}
+                {proj!.overview?.outcome && (
+                  <div class="card p-5">
+                    <h3 class="text-sm font-semibold flex items-center gap-2">✅ Outcome</h3>
+                    <p class="mt-2 text-sm/6 opacity-90">{proj!.overview.outcome}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <!-- Sections (preferred) -->
+            {(proj!.sections?.length ?? 0) > 0 ? (
+              proj!.sections!.map((s) => (
+                <section class="reveal card p-6 space-y-3 text-sm/7 opacity-90" data-reveal>
+                  <h2 class="text-base font-semibold">{s.title}</h2>
+                  {s.body.map((p) => <p>{p}</p>)}
+                </section>
+              ))
+            ) : (
+              <!-- Legacy body array -->
+              <article class="reveal card p-6 space-y-4 text-sm/7 opacity-90" data-reveal>
+                {(proj!.body?.length ?? 0) > 0 ? proj!.body!.map((p) => <p>{p}</p>) : <p>Detailed write-up coming soon.</p>}
+              </article>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <!-- NEXT / PREV -->
+      {(prev || next) && (
+        <section class="section pt-0">
+          <div class="reveal grid gap-4 sm:grid-cols-2" data-reveal>
+            {prev && (
+              <a class="card p-5 hover:ring-white/15" href={`/projects/${prev.slug}`}>
+                <p class="text-xs opacity-70">Previous</p>
+                <h3 class="mt-1 font-semibold">{prev.title}</h3>
+                <p class="mt-1 text-sm opacity-80 line-clamp-2">{prev.summary}</p>
+              </a>
+            )}
+            {next && (
+              <a class="card p-5 hover:ring-white/15 sm:text-right sm:ml-auto" href={`/projects/${next.slug}`}>
+                <p class="text-xs opacity-70">Next</p>
+                <h3 class="mt-1 font-semibold">{next.title}</h3>
+                <p class="mt-1 text-sm opacity-80 line-clamp-2">{next.summary}</p>
+              </a>
+            )}
+          </div>
+        </section>
+      )}
+
+      <!-- CTA -->
+      <section class="section">
+        <div class="reveal card p-6 flex flex-wrap items-center justify-between gap-4" data-reveal>
+          <div>
+            <h2 class="text-xl font-semibold">Interested in similar work?</h2>
+            <p class="opacity-90">I can help you design, build, and ship production-grade apps.</p>
+          </div>
+          <a href="/#contact" class="btn btn-primary">Contact me</a>
+        </div>
+      </section>
+    </>
+  )}
+
+  <!-- Page JS: thumbs + copy link (no frameworks) -->
+  <script>
+    // Copy URL
+    const copyBtn = document.getElementById("copy-link");
+    copyBtn?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        copyBtn.textContent = "Link copied!";
+        setTimeout(() => (copyBtn.textContent = "Copy link"), 1800);
+      } catch {}
+    });
+
+    // Thumbnails → swap main image
+    const main = document.getElementById("main-media");
+    const rail = document.getElementById("thumbs");
+    if (main && rail) {
+      rail.addEventListener("click", (e) => {
+        const b = (e.target as HTMLElement).closest(".thumb");
+        if (!b) return;
+        const src = b.getAttribute("data-src");
+        if (!src) return;
+        main.setAttribute("src", src);
+        rail.querySelectorAll(".thumb").forEach((x) => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+      });
+    }
+  </script>
+
+  <style>
+    .thumb {
+      display: grid; place-items: center;
+      border-radius: .75rem; overflow: hidden;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: contain; padding: .35rem; }
+    .thumb:hover { transform: translateY(-2px); background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.2); }
+    .thumb.is-active { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+    /* Hide scrollbar for horizontal thumb rail on small screens */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</Base>

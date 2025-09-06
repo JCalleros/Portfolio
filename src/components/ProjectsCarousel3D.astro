@@ -1,0 +1,319 @@
+---
+type Project = {
+  slug?: string;
+  title: string;
+  summary: string;
+  image: string;   // Cloudinary or local
+  tags?: string[];
+};
+const { items = [] } = Astro.props as { items: Project[] };
+
+const toSlug = (s: string) =>
+  s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+const list = items.map((p) => ({
+  ...p,
+  slug: p.slug ?? toSlug(p.title),
+  tags: p.tags ?? [],
+}));
+const total = list.length;
+
+/* Cloudinary srcset helper — only used if the URL starts with res.cloudinary.com */
+const widths = [640, 960, 1280, 1600, 1920, 2560];
+const isCLD = (u: string) => u.startsWith("https://res.cloudinary.com/");
+const cld = (u: string, w: number) =>
+  u.replace("/image/upload/", `/image/upload/f_auto,q_auto,dpr_auto,w_${w}/`);
+---
+<div class="carousel3d" data-3d>
+  <!-- Controls -->
+  <button class="nav prev btn-icon" data-prev aria-label="Previous project">
+    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+    </svg>
+  </button>
+  <button class="nav next btn-icon" data-next aria-label="Next project">
+    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <!-- Stage -->
+  <div id="stage" class="stage" aria-roledescription="carousel" aria-label="Projects" tabindex="0">
+    {list.map((p, i) => {
+      const useCLD = isCLD(p.image);
+      const src = useCLD ? cld(p.image, 1600) : p.image;
+      const srcset = useCLD ? widths.map((w) => `${cld(p.image, w)} ${w}w`).join(", ") : undefined;
+      const sizes = useCLD ? "(min-width:1024px) 70vw, 92vw" : undefined;
+
+      return (
+        <article
+          class="slide card"
+          data-i={i}
+          role="group"
+          aria-roledescription="slide"
+          aria-label={`${p.title} — ${i + 1} of ${total}`}
+        >
+          <figure class="frame media-frame">
+            <img
+              src={src}
+              srcset={srcset}
+              sizes={sizes}
+              alt={`${p.title} screenshot`}
+              class="shot"
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding="async"
+              fetchpriority={i === 0 ? "high" : "auto"}
+            />
+            <div class="scrim" aria-hidden="true"></div>
+          </figure>
+
+          <div class="content p-5 md:p-6">
+            <h3 class="text-xl md:text-2xl font-semibold tracking-tight">{p.title}</h3>
+            <p class="mt-2 text-sm/6 opacity-90">{p.summary}</p>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+              {p.tags.slice(0, 5).map((t) => <span class="tag">{t}</span>)}
+              {p.tags.length > 5 && <span class="tag">+ {p.tags.length - 5} more</span>}
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <a class="btn btn-ghost" href={`/projects/${p.slug}`}>View case study →</a>
+              <a class="btn btn-ghost" href={`/projects/${p.slug}`}>Quick view</a>
+            </div>
+          </div>
+        </article>
+      );
+    })}
+
+    <!-- Edge curtains so arrows always contrast -->
+    <div class="edge left" aria-hidden="true"></div>
+    <div class="edge right" aria-hidden="true"></div>
+
+    <!-- Floor mask to keep side slides from overlapping the center card area -->
+    <div class="floor-mask" aria-hidden="true"></div>
+  </div>
+
+  <!-- Dots -->
+  <div class="dots">
+    {list.map((_, i) => (
+      <button class={"dot" + (i === 0 ? " is-active" : "")} data-index={i} aria-label={`Go to project ${i + 1}`}></button>
+    ))}
+  </div>
+
+  <!-- SR live region -->
+  <p class="sr-only" aria-live="polite" id="sr-status">Project 1 of {total}</p>
+</div>
+
+<style>
+  .carousel3d { position: relative; }
+
+  /* Arrows – visible above everything, glassy, high contrast */
+  .nav {
+    position: absolute;
+    top: calc(clamp(540px, 54vw, 680px) / 2);
+    transform: translateY(-50%);
+    z-index: 60; /* above slides, curtains, mask */
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    border-radius: 9999px;
+    color: #fff;
+    background: rgba(10, 11, 14, .72);
+    border: 1px solid rgba(255,255,255,.22);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 10px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .nav:hover { background: rgba(10,11,14,.85); transform: translateY(-50%) scale(1.05); border-color: rgba(255,255,255,.3); }
+  .nav:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .nav.prev { left: 12px; }
+  .nav.next { right: 12px; }
+  .nav-icon { width: 22px; height: 22px; }
+
+  /* Stage */
+  .stage {
+    position: relative;
+    height: clamp(540px, 54vw, 680px);
+    perspective: 1200px;
+    transform-style: preserve-3d;
+    outline: none;
+  }
+
+  /* Slides */
+  .slide {
+    position: absolute; inset: 0;
+    width: min(980px, 90vw);
+    margin: 0 auto;
+    left: 50%;
+    transform: translateX(-50%) translateZ(0); /* baseline plane */
+    display: grid;
+    grid-template-rows: minmax(0, var(--mediaH, 58%)) auto;
+    overflow: hidden;
+    transition:
+      transform .55s cubic-bezier(.2,.8,.25,1),
+      opacity .45s cubic-bezier(.2,.8,.25,1),
+      filter .45s cubic-bezier(.2,.8,.25,1),
+      box-shadow .45s ease;
+    will-change: transform, opacity, filter;
+    backface-visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* ACTIVE slide — keep pixel-crisp (no perspective scaling / filters) */
+  .slide[data-pos="center"] {
+    --mediaH: 68%;
+    z-index: 50;
+    isolation: isolate;
+    transform: translate3d(-50%, 0, 0) rotateY(0deg) scale(1);
+    filter: none;
+    box-shadow: 0 18px 60px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06);
+    pointer-events: auto;
+  }
+  @media (min-width: 1280px) { .slide[data-pos="center"] { --mediaH: 72%; } }
+
+  .frame { position: relative; background: rgba(255,255,255,.03); }
+
+  .shot {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    object-position: center;
+    padding: .5rem; /* default */
+    transform: translate3d(var(--tx, 0px), var(--ty, 0px), 0) scale(1);
+    transition: transform .2s ease;
+    backface-visibility: hidden;
+    image-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  .slide[data-pos="center"] .shot { padding: .25rem; }
+
+  .scrim { position: absolute; inset: 0; background: transparent; transition: background .3s ease; }
+  .content { opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .35s ease; }
+  .slide[data-pos="center"] .content { opacity: 1; transform: translateY(0); }
+  .slide[data-pos="center"] .scrim { background: linear-gradient(to top, rgba(0,0,0,.28), transparent 40%); }
+
+  /* SIDE/FAR slides — pushed back & clipped so they never intrude */
+  .slide[data-pos="left"],
+  .slide[data-pos="right"] {
+    z-index: 30;
+    filter: saturate(.85);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);
+  }
+  .slide[data-pos="left"]  {
+    transform: translateX(calc(-50% - 36vmin)) translateZ(-180px) rotateY(16deg) scale(.82);
+    clip-path: polygon(0 0, 72% 0, 64% 100%, 0 100%);
+  }
+  .slide[data-pos="right"] {
+    transform: translateX(calc(-50% + 36vmin)) translateZ(-180px) rotateY(-16deg) scale(.82);
+    clip-path: polygon(28% 0, 100% 0, 100% 100%, 36% 100%);
+  }
+  .slide[data-pos="far"] {
+    z-index: 20;
+    transform: translateX(-50%) translateZ(-260px) rotateY(0deg) scale(.78);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Edge curtains & floor mask */
+  .edge { position: absolute; top: 0; bottom: 0; width: 20%; pointer-events: none; z-index: 25; }
+  .edge.left  { left: 0;  background: linear-gradient(to right, rgba(0,0,0,.48), transparent 70%); }
+  .edge.right { right: 0; background: linear-gradient(to left,  rgba(0,0,0,.48), transparent 70%); }
+
+  .floor-mask {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 22%;
+    z-index: 40; pointer-events: none;
+    background: linear-gradient(to top, rgba(6,8,12,0.90) 12%, rgba(6,8,12,0.70) 55%, rgba(6,8,12,0) 100%);
+  }
+
+  /* Dots */
+  .dots { margin-top: .75rem; display: flex; justify-content: center; gap: .5rem; }
+  .dot { width: 8px; height: 8px; border-radius: 9999px; background: rgba(255,255,255,.25); transition: transform .2s, background .2s; }
+  .dot.is-active { background: var(--color-accent); transform: scale(1.2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage { perspective: none; }
+    .slide { transform: translateX(-50%) !important; }
+    .content { opacity: 1 !important; transform: none !important; }
+  }
+</style>
+
+<script>
+  const root   = document.querySelector('[data-3d]');
+  const stage  = root.querySelector('#stage');
+  const slides = [...root.querySelectorAll('.slide')];
+  const dots   = [...root.querySelectorAll('.dot')];
+  const prev   = root.querySelector('[data-prev]');
+  const next   = root.querySelector('[data-next]');
+  const live   = root.querySelector('#sr-status');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let i = 0, N = slides.length;
+  const order = (idx) => ((idx - i) % N + N) % N;
+  const pos   = (idx) => { const d = order(idx); if (d === 0) return "center"; if (d === 1) return "right"; if (d === N - 1) return "left"; return "far"; };
+
+  function apply() {
+    slides.forEach((el, idx) => {
+      el.dataset.pos = pos(idx);
+      if (el.dataset.pos !== "center") {
+        el.style.setProperty("--tx", "0px");
+        el.style.setProperty("--ty", "0px");
+      }
+    });
+    dots.forEach((d, idx) => d.classList.toggle("is-active", idx === i));
+    live.textContent = `Project ${i + 1} of ${N}`;
+  }
+  function goTo(k) { i = (k % N + N) % N; apply(); }
+  function nextSlide() { goTo(i + 1); }
+  function prevSlide() { goTo(i - 1); }
+
+  apply();
+  next.addEventListener("click", nextSlide);
+  prev.addEventListener("click", prevSlide);
+  dots.forEach((d) => d.addEventListener("click", () => goTo(Number(d.dataset.index) || 0)));
+
+  stage.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") { nextSlide(); e.preventDefault(); }
+    if (e.key === "ArrowLeft")  { prevSlide(); e.preventDefault(); }
+  });
+
+  let down = false, sx = 0, mx = 0;
+  stage.addEventListener("pointerdown", (e) => { down = true; sx = e.clientX; mx = 0; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener("pointermove", (e) => { if (down) mx = e.clientX - sx; });
+  stage.addEventListener("pointerup",   () => { if (!down) return; down = false; if (Math.abs(mx) > 40) (mx < 0 ? nextSlide : prevSlide)(); });
+
+  // Autoplay with smart pause
+  let timer = 0; const period = 5600; const reasons = new Set();
+  const stop = () => { clearInterval(timer); timer = 0; };
+  const start = () => { if (!reduce && !timer && reasons.size === 0) timer = setInterval(nextSlide, period); };
+  start();
+  root.addEventListener("mouseenter", () => { reasons.add("hover"); stop(); });
+  root.addEventListener("mouseleave", () => { reasons.delete("hover"); start(); });
+  root.addEventListener("focusin",  () => { reasons.add("focus"); stop(); });
+  root.addEventListener("focusout", () => { reasons.delete("focus"); start(); });
+  stage.addEventListener("pointerdown", () => { reasons.add("drag"); stop(); });
+  stage.addEventListener("pointerup",   () => { reasons.delete("drag"); start(); });
+  document.addEventListener("visibilitychange", () => { document.hidden ? (reasons.add("hidden"), stop()) : (reasons.delete("hidden"), start()); });
+
+  // Parallax on active (no zoom; rounded to 0.5px to keep text crisp)
+  if (!reduce) {
+    root.addEventListener("pointermove", (e) => {
+      const active = slides[i];
+      const img = active?.querySelector(".shot");
+      if (!img) return;
+      const r = active.getBoundingClientRect();
+      const dx = ((e.clientX - r.left) / r.width) - 0.5;
+      const dy = ((e.clientY - r.top) / r.height) - 0.5;
+      const max = 8;
+      const tx = Math.round((-dx * max) * 2) / 2;
+      const ty = Math.round((-dy * max) * 2) / 2;
+      active.style.setProperty("--tx", `${tx}px`);
+      active.style.setProperty("--ty", `${ty}px`);
+    });
+    root.addEventListener("pointerleave", () => {
+      const active = slides[i];
+      active?.style.setProperty("--tx","0px");
+      active?.style.setProperty("--ty","0px");
+    });
+  }
+</script>

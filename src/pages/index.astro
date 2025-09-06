@@ -1,0 +1,98 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import ScrollProgress from "../components/ScrollProgress.astro";
+import FX from "../components/FX.astro";
+import HeroVisual from "../components/HeroVisual.astro";
+import ExperienceTimeline from "../components/ExperienceTimeline.astro";
+import SkillsShowcase from "../components/SkillsShowcase.astro";
+import ContactForm from "../components/ContactForm.astro";
+import ProjectsCarousel3D from "../components/ProjectsCarousel3D.astro"
+import AchievementsStrip from "../components/AchievementsStrip.astro";
+import projects from "../data/projects";
+import experience from "../data/experience";
+import achievements from "../data/achievements";
+
+const featured = projects.slice(0, 6);
+
+---
+<Base>
+  <a id="top"></a>
+  <Nav />
+  <ScrollProgress />
+  <FX />
+
+  <!-- HERO -->
+  <section class="container-x section-pad grid items-center gap-8 md:gap-12 md:grid-cols-[1.1fr_1fr]" data-bg="hero" id="hero">
+    <div class="reveal" data-reveal>
+      <h1 class="max-w-2xl text-balance text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+        Full-Stack Engineer <span class="text-[--color-accent]">building robust web apps</span>
+      </h1>
+      <p class="mt-4 max-w-xl text-base/7 opacity-90">
+        Python/Django + React • Cloud-ready • Automation-minded.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="#contact" class="btn btn-primary">Contact</a>
+        <a href="/cv.pdf" class="btn btn-ghost">Download CV</a>
+      </div>
+      <ul class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm opacity-90">
+        <li><strong>5+ yrs</strong><br/>Experience</li>
+        <li><strong>Python/Django</strong><br/>Backend</li>
+        <li><strong>React</strong><br/>Frontend</li>
+      </ul>
+    </div>
+    <div class="reveal" data-reveal>
+      <HeroVisual />
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects" class="section" data-bg="projects">
+    <header class="mb-6 md:mb-8 reveal flex items-center justify-between gap-4" data-reveal>
+      <div>
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Projects</h2>
+        <p class="mt-2 opacity-90">One by one, with depth and detail.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="/projects" class="btn btn-ghost">View all →</a>
+        <button type="button" class="btn btn-ghost js-open-all" aria-label="Quick view all">Quick view</button>
+      </div>
+    </header>
+
+    <div class="reveal" data-reveal>
+      <ProjectsCarousel3D items={featured} />
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience" class="section" data-bg="experience">
+    <header class="mb-6 md:mb-8 reveal" data-reveal>
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Experience</h2>
+    </header>
+    <ExperienceTimeline items={experience} />
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills" class="section" data-bg="skills">
+    <header class="mb-6 md:mb-8 reveal" data-reveal>
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Skills</h2>
+      <p class="mt-2 opacity-90">What I use to build reliable, production-grade software.</p>
+    </header>
+
+    <SkillsShowcase />
+  </section>
+
+  <!-- NEW: ACHIEVEMENTS STRIP -->
+  <AchievementsStrip items={achievements} />
+
+  <!-- CONTACT -->
+  <section id="contact" class="section" data-bg="contact">
+    <header class="mb-6 reveal" data-reveal>
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Let’s work together</h2>
+      <p class="mt-2 opacity-90">Send a message—goes straight to my inbox.</p>
+    </header>
+
+    <ContactForm />
+  </section>
+
+</Base>

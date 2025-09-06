@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+/* ---------- Tokens ---------- */
+@theme {
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --color-bg:    oklch(19% 0.02 260);
+  --color-card:  oklch(22% 0.02 260);
+  --color-fg:    oklch(98% 0.02 260);
+  --color-accent: oklch(80% 0.16 190);
+  --color-accent-ink: oklch(10% 0 0);
+
+  --radius-2xl: 1.25rem;
+}
+
+:root {
+  color-scheme: dark;
+  /* Aurora palette (default = “hero” theme) */
+  --aurora-a: oklch(78% 0.16 190); /* teal */
+  --aurora-b: oklch(74% 0.14 220); /* blue */
+  --aurora-c: oklch(70% 0.12 200); /* cyan */
+  /* Parallax shift (updated by JS) */
+  --bg-shift-x: 0px;
+  --bg-shift-y: 0px;
+}
+::selection { background: oklch(80% 0.16 190 / .35); color: var(--color-fg); }
+
+body { font-family: var(--font-sans); background: var(--color-bg); color: var(--color-fg); }
+
+/* ---------- Premium background (aurora + vignette + micro-noise) ---------- */
+body::before {
+  content:"";
+  position: fixed; inset: -10% -10% -20% -10%;
+  z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(65% 45% at 15% 0%,
+      color-mix(in oklab, var(--aurora-a) 28%, transparent) 0%,
+      transparent 60%),
+    radial-gradient(50% 40% at 85% 10%,
+      color-mix(in oklab, var(--aurora-b) 22%, transparent) 0%,
+      transparent 55%),
+    radial-gradient(60% 50% at 50% 100%,
+      color-mix(in oklab, var(--aurora-c) 16%, transparent) 0%,
+      transparent 60%);
+  filter: blur(60px);
+  opacity: .55;
+  transform: translate3d(var(--bg-shift-x), var(--bg-shift-y), 0);
+}
+body::after{
+  content:"";
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 115%, rgba(0,0,0,.55), transparent 60%),
+    radial-gradient(60% 40% at 10% 10%, rgba(255,255,255,.03), transparent 40%);
+}
+.bg-noise {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,.06) .5px, transparent .5px);
+  background-size: 8px 8px; opacity: .02;
+}
+
+/* Section themes — FX.astro toggles body[data-theme="*"] */
+body[data-theme="hero"] {
+  --aurora-a: oklch(78% 0.16 190);
+  --aurora-b: oklch(74% 0.14 220);
+  --aurora-c: oklch(70% 0.12 200);
+}
+body[data-theme="projects"] {
+  --aurora-a: oklch(75% 0.20 300); /* violet */
+  --aurora-b: oklch(72% 0.16 330); /* magenta */
+  --aurora-c: oklch(70% 0.14 280); /* indigo */
+}
+body[data-theme="experience"] {
+  --aurora-a: oklch(80% 0.16 180); /* teal-green */
+  --aurora-b: oklch(76% 0.14 160); /* green */
+  --aurora-c: oklch(70% 0.12 200); /* cyan */
+}
+body[data-theme="skills"] {
+  --aurora-a: oklch(82% 0.14 90);  /* amber */
+  --aurora-b: oklch(78% 0.10 60);  /* warm */
+  --aurora-c: oklch(72% 0.12 110); /* gold */
+}
+body[data-theme="contact"] {
+  --aurora-a: oklch(80% 0.19 20);  /* fuchsia-red */
+  --aurora-b: oklch(74% 0.15 350); /* pink */
+  --aurora-c: oklch(72% 0.12 10);  /* rose */
+}
+
+/* Focus */
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Layout helpers (tighter rhythm) ---------- */
+.container-x { @apply mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8; }
+.section-pad { @apply py-14 md:py-22; }
+.section { @apply mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-14 md:py-22 scroll-mt-24; }
+
+/* ---------- Buttons ---------- */
+.btn { @apply inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium select-none transition; }
+.btn-primary { background: var(--color-accent); color: var(--color-accent-ink); @apply shadow; }
+.btn-primary:hover { filter: brightness(0.96); }
+.btn-ghost { @apply ring-1 ring-white/20 hover:ring-white/40; }
+.btn-icon { @apply rounded-full bg-white/10 p-2 ring-1 ring-white/15 backdrop-blur hover:bg-white/15; }
+
+/* ---------- Cards / chips ---------- */
+.card { @apply rounded-[--radius-2xl] bg-[--color-card] ring-1 ring-white/5 transition; }
+.card:hover { @apply ring-white/10 translate-y-[1px]; }
+.card-eq { @apply h-full flex flex-col overflow-hidden; }
+.tag  { @apply rounded-full bg-white/8 px-3 py-1 text-xs; }
+
+/* ---------- Media frame + skeleton + fade-in ---------- */
+.media-frame {
+  @apply rounded-[--radius-2xl] ring-1 ring-white/10 overflow-hidden bg-[--color-card];
+  background-image:
+    radial-gradient(1200px 400px at 20% 10%, rgba(255,255,255,.04), transparent),
+    linear-gradient(135deg, rgba(255,255,255,.04), transparent);
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.10) 37%,
+    rgba(255,255,255,0.04) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes floaty { 0%{transform:translateY(0)} 50%{transform:translateY(-4px)} 100%{transform:translateY(0)} }
+.floaty { animation: floaty 5s ease-in-out infinite; }
+
+@keyframes shimmer { 0% {background-position: 200% 0} 100% {background-position: -200% 0} }
+.fade-in { opacity: 0; transition: opacity .4s ease; }
+.fade-in.is-loaded { opacity: 1; }
+
+/* ---------- Reveal (in-view) ---------- */
+.reveal { opacity: 0; transform: translateY(12px); transition: opacity .6s cubic-bezier(.2,.7,.3,1), transform .6s cubic-bezier(.2,.7,.3,1); }
+.reveal.in-view { opacity: 1; transform: translateY(0); }
+
+/* ---------- Tilt (3D hover) ---------- */
+.tilt { transform: perspective(1000px) rotateX(0) rotateY(0) translateZ(0); transform-style: preserve-3d; will-change: transform; }
+
+/* ---------- Timeline ---------- */
+.timeline { position: relative; }
+.timeline::before {
+  content: "";
+  position: absolute; left: 12px; top: .25rem; bottom: .25rem;
+  width: 2px; background: color-mix(in oklab, var(--color-fg) 10%, transparent);
+}
+.timeline-item { position: relative; padding-left: 2.5rem; }
+.timeline-item::before {
+  content: ""; position: absolute; left: 6px; top: .4rem;
+  width: 14px; height: 14px; border-radius: 9999px;
+  background: var(--color-accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 30%, transparent);
+}
+
+/* ---------- Nav active ---------- */
+.nav-link[aria-current="true"] { color: var(--color-accent); }
+
+#spotlight > section.reveal { opacity: 0; transform: translateY(10px) scale(.995); }
+#spotlight > section.reveal.in-view { opacity: 1; transform: translateY(0) scale(1); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ---------- Mobile niceties ---------- */
+@media (max-width: 639px) {
+  h1 { line-height: 1.15; }
+}

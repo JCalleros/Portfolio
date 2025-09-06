@@ -1,0 +1,20 @@
+---
+---
+<div class="fixed left-0 top-0 z-[60] h-[3px] w-full bg-transparent">
+  <div id="__bar" class="h-full w-0 bg-[--color-accent]"></div>
+</div>
+<script>
+  const bar = document.getElementById("__bar");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const update = () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - innerHeight;
+    const p = Math.max(0, Math.min(1, scrollY / (max || 1)));
+    bar.style.width = (p * 100).toFixed(2) + "%";
+  };
+  if (!reduce) {
+    addEventListener("scroll", update, { passive: true });
+    addEventListener("resize", update);
+    update();
+  }
+</script>
