@@ -1,7 +1,7 @@
 ---
 const links = [
-  { href: "/projects", label: "Projects", kind: "route" },   // dedicated page
-  { href: "#experience", label: "Experience", kind: "hash" }, // landing sections
+  { href: "/projects", label: "Projects", kind: "route" },
+  { href: "#experience", label: "Experience", kind: "hash" },
   { href: "#skills",     label: "Skills",     kind: "hash" },
   { href: "#contact",    label: "Contact",    kind: "hash" },
 ];
@@ -13,10 +13,8 @@ const links = [
     data-scrolled="false"
   >
     <div class="container-x py-3 flex items-center justify-between">
-      <!-- Brand should always go home so it works from any page -->
       <a href="/" class="font-semibold tracking-tight">Jorge Calleros</a>
 
-      <!-- desktop -->
       <ul class="hidden md:flex gap-4 text-sm">
         {links.map((l) => (
           <li>
@@ -32,7 +30,6 @@ const links = [
         ))}
       </ul>
 
-      <!-- mobile trigger -->
       <button
         class="md:hidden btn-icon"
         aria-label="Open menu"
@@ -47,7 +44,6 @@ const links = [
       </button>
     </div>
 
-    <!-- mobile menu -->
     <div id="mobile-menu" class="md:hidden hidden border-t border-white/10">
       <ul class="container-x py-2 flex flex-col">
         {links.map((l) => (
@@ -68,7 +64,6 @@ const links = [
 </nav>
 
 <script>
-  // Scroll styling (adds subtle darkening & hairline)
   const bar = document.getElementById("site-nav");
   const onScroll = () => {
     const scrolled = window.scrollY > 6;
@@ -79,14 +74,12 @@ const links = [
   addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
-  // Mobile menu
   const btn = document.getElementById("menu-btn");
   const menu = document.getElementById("mobile-menu");
   btn?.addEventListener("click", () => {
     const open = menu.classList.toggle("hidden") === false;
     btn.setAttribute("aria-expanded", String(open));
   });
-  // Close menu when a link is clicked
   menu?.addEventListener("click", (e) => {
     const a = e.target.closest("a");
     if (!a) return;
@@ -94,34 +87,26 @@ const links = [
     btn.setAttribute("aria-expanded", "false");
   });
 
-  // ---------- Smart section linking ----------
-  // If a link targets a hash and the section isn't on the current page,
-  // route to "/#hash" instead (works from /projects and detail pages).
   const HOME = "/";
   const navLinks = [...document.querySelectorAll('a.nav-link[data-kind="hash"]')];
 
   navLinks.forEach((a) => {
     a.addEventListener("click", (e) => {
-      const href = a.getAttribute("href"); // "#skills" etc.
+      const href = a.getAttribute("href");
       if (!href || !href.startsWith("#")) return;
       const target = document.querySelector(href);
-      if (target) return; // section exists here; let default scroll happen
+      if (target) return;
 
       e.preventDefault();
-      // Navigate home with the same hash; browser will scroll to the section there.
       window.location.assign(HOME + href);
     });
   });
 
-  // ---------- Active state ----------
-  // 1) Route-level active (e.g., /projects)
   const path = location.pathname.replace(/\/+$/, "");
   document
     .querySelectorAll('a.nav-link[href="/projects"]')
     .forEach((el) => el.setAttribute("aria-current", path.startsWith("/projects") ? "true" : "false"));
 
-  // 2) Section links get active on the landing page via your scroll-spy (FX.astro).
-  //    When not on home, keep them unselected so the route highlight is clear.
   if (path !== "" && path !== "/") {
     document
       .querySelectorAll('a.nav-link[data-kind="hash"]')

@@ -1,10 +1,4 @@
 ---
-/**
- * Animated skills section:
- * - Orbit (two rings of icons)
- * - Grid of categorized skill chips
- * Motion respects `prefers-reduced-motion`.
- */
 type Item = { label: string; icon: string };
 const ringA: Item[] = [
   { label: "React", icon: "⚛️" },
@@ -203,7 +197,6 @@ const groups: { title: string; items: Item[] }[] = [
     font-size: .9rem;
   }
 
-  /* Motion helpers (disabled when reduced-motion) */
   @media (prefers-reduced-motion: no-preference) {
     .orbit-spin { animation: orbit-rotate 58s linear infinite; }
     .orbit-spin.reverse { animation-direction: reverse; }
