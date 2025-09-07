@@ -34,7 +34,15 @@ const featured = projects.slice(0, MAX_PROJECTS);
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
         <a href="#contact" class="btn btn-primary">Contact</a>
-        <a href="/cv.pdf" class="btn btn-ghost">Download CV</a>
+        <a
+          href="/cv.pdf"
+          class="btn btn-ghost"
+          download="Jorge_Calleros_CV.pdf"
+          type="application/pdf"
+          aria-label="Download CV as PDF"
+        >
+          Download CV
+        </a>
       </div>
       <ul class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm opacity-90">
         <li><strong>5+ yrs</strong><br/>Experience</li>
