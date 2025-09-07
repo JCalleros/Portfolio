@@ -2,27 +2,30 @@ name: ci
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main]        # PRs into main must pass tests before merge
   push:
-    branches: [main]
+    branches: [main]        # Optional: re-run tests on main after merge
+  workflow_dispatch:        # Allow manual runs from the Actions tab
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: npm
 
       - name: Install deps
         run: npm ci
@@ -33,14 +36,14 @@ jobs:
       - name: Build site
         run: npm run build
 
-      - name: Start preview server
+      - name: Serve build (http-server) and wait
         run: |
-          npm run preview -- --port=4321 & \
-          npx wait-on http://localhost:4321
+          npx --yes http-server ./dist -p 4321 -c-1 --silent &
+          npx --yes wait-on http://127.0.0.1:4321
 
-      - name: Run E2E
+      - name: Run Playwright tests
         env:
-          BASE_URL: http://localhost:4321
+          BASE_URL: http://127.0.0.1:4321
         run: npx playwright test
 
       - name: Upload HTML report (always)
