@@ -2,10 +2,10 @@ name: ci
 
 on:
   pull_request:
-    branches: [main]        # PRs into main must pass tests before merge
+    branches: [main]
   push:
-    branches: [main]        # Optional: re-run tests on main after merge
-  workflow_dispatch:        # Allow manual runs from the Actions tab
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
