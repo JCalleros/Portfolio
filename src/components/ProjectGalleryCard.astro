@@ -5,10 +5,17 @@ const {
 } = Astro.props as any;
 
 const href = `/projects/${slug}`;
-const tagAttr = tags.join(",").toLowerCase();
-const metric = metrics?.[0]; // show one quick stat if available
+
+const tagAttr = tags.map((t: string) => t.toLowerCase()).join(' ');
+const searchAttr = [title, summary, ...tags].join(' ').toLowerCase();
+const metric = metrics?.[0];
+const MAX_TAGS = 4;
 ---
-<article class="card card-eq group overflow-hidden" data-tags={tagAttr}>
+<article
+  class="card card-eq group overflow-hidden"
+  data-tags={tagAttr}
+  data-search={searchAttr}
+>
   <a href={href} aria-label={`Open ${title}`} class="block">
     <figure class="relative aspect-[16/10] bg-white/5">
       <img
@@ -35,8 +42,8 @@ const metric = metrics?.[0]; // show one quick stat if available
     </div>
 
     <div class="flex flex-wrap gap-2">
-      {tags.slice(0, 4).map((t: string) => <span class="tag">{t}</span>)}
-      {tags.length > 4 && <span class="tag">+ {tags.length - 4} more</span>}
+      {tags.slice(0, MAX_TAGS).map((t: string) => <span class="tag">{t}</span>)}
+      {tags.length > MAX_TAGS && <span class="tag">+ {tags.length - MAX_TAGS} more</span>}
     </div>
 
     <div class="mt-auto border-t border-white/10 pt-3">
