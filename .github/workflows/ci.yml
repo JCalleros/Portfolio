@@ -33,12 +33,16 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Build site
+      - name: Build (Node adapter for CI)
+        env:
+          ASTRO_PREVIEW: "1"
         run: npm run build
 
-      - name: Serve build (http-server) and wait
+      - name: Start Astro preview (SSR) and wait
+        env:
+          ASTRO_PREVIEW: "1"
         run: |
-          npx --yes http-server ./dist -p 4321 -c-1 --silent &
+          npx astro preview --port 4321 & \
           npx --yes wait-on http://127.0.0.1:4321
 
       - name: Run Playwright tests
