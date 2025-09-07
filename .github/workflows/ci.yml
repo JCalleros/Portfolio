@@ -2,10 +2,10 @@ name: ci
 
 on:
   pull_request:
-    branches: [main]        # PRs into main must pass tests before merge
+    branches: [main]
   push:
-    branches: [main]        # Optional: re-run tests on main after merge
-  workflow_dispatch:        # Allow manual runs from the Actions tab
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -36,9 +36,25 @@ jobs:
       - name: Build site
         run: npm run build
 
-      - name: Serve build (http-server) and wait
+      - name: Resolve build dir
+        id: out
+        shell: bash
         run: |
-          npx --yes http-server ./dist -p 4321 -c-1 --silent &
+          if [ -d ".vercel/output/static" ]; then
+            echo "dir=.vercel/output/static" >> "$GITHUB_OUTPUT"
+          elif [ -d "dist" ]; then
+            echo "dir=dist" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ No static build found. Available:"
+            ls -la
+            ls -la .vercel || true
+            exit 1
+          fi
+          echo "Serving: ${{ steps.out.outputs.dir }}"
+
+      - name: Serve build and wait
+        run: |
+          npx --yes http-server "${{ steps.out.outputs.dir }}" -p 4321 -c-1 --silent &
           npx --yes wait-on http://127.0.0.1:4321
 
       - name: Run Playwright tests
