@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-// Use BASE_URL if you prefer: BASE_URL=http://localhost:4321 npm run test
 const BASE = process.env.BASE_URL || 'http://localhost:4321';
 
 test.describe('Landing page', () => {
@@ -13,12 +12,8 @@ test.describe('Landing page', () => {
 
     const nav = page.locator('#site-nav');
     const hero = page.locator('#hero');
-
-    // Contact link in NAV
     const navContact = nav.getByRole('link', { name: /^contact$/i });
     await expect(navContact).toHaveAttribute('href', '#contact');
-
-    // Contact + CV links in HERO
     const heroContact = hero.getByRole('link', { name: /^contact$/i });
     const cv = hero.getByRole('link', { name: /download cv/i });
     await expect(heroContact).toHaveAttribute('href', '#contact');
@@ -45,20 +40,14 @@ test.describe('Landing page', () => {
       await page.locator('.slide[data-pos="center"]').getAttribute('data-i');
 
     const before = await getActiveIndex();
-
-    // Next (button or data-next)
     const nextBtn = page.locator('[data-next], button[aria-label="Next project"]');
     await nextBtn.first().click();
-
     await expect.poll(getActiveIndex).not.toBe(before);
-
-    // Keyboard left
     await page.locator('#stage').focus();
     const afterClick = await getActiveIndex();
     await page.keyboard.press('ArrowLeft');
     await expect.poll(getActiveIndex).not.toBe(afterClick);
 
-    // Dots exist
     const dotCount = await page.locator('.dots .dot').count();
     expect(dotCount).toBeGreaterThan(0);
   });
@@ -77,5 +66,20 @@ test.describe('Landing page', () => {
   test('contact form exists', async ({ page }) => {
     await page.locator('#contact').scrollIntoViewIfNeeded();
     await expect(page.locator('#contact form')).toBeVisible();
+  });
+
+  test('CV button forces PDF download', async ({ page }) => {
+    const hero = page.locator('#hero');
+    const cv = hero.getByRole('link', { name: /download cv/i });
+    await expect(cv).toHaveAttribute('href', '/cv.pdf');
+    await expect(cv).toHaveAttribute('download', /.+\.pdf$/);
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      cv.click(),
+    ]);
+
+    const name = download.suggestedFilename().toLowerCase();
+    expect(name).toMatch(/\.pdf$/);
+    expect(name).toContain('jorge');
   });
 });
