@@ -8,12 +8,12 @@ const schema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   message: z.string().min(10).max(5000),
-  _hp: z.string().optional(),             // honeypot (must be empty)
-  _ts: z.string().optional(),             // timestamp
+  _hp: z.string().optional(),
+  _ts: z.string().optional(),
 });
 
 const resendKey = import.meta.env.RESEND_API_KEY;
-const CONTACT_TO = import.meta.env.CONTACT_TO;       // your inbox
+const CONTACT_TO = import.meta.env.CONTACT_TO;
 const CONTACT_FROM =
   import.meta.env.CONTACT_FROM ?? "Portfolio <onboarding@resend.dev>";
 
@@ -42,7 +42,6 @@ function escapeHtml(s: string) {
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   try {
-    // Accept form-encoded or JSON
     const contentType = request.headers.get("content-type") || "";
     let data: any = {};
     if (contentType.includes("application/json")) {
@@ -59,18 +58,16 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
     const { name, email, message, _hp, _ts } = parsed.data;
 
-    // Simple anti-spam: honeypot empty, and time on page >= 3s
     if (_hp && _hp.trim() !== "") {
-      return new Response(JSON.stringify({ ok: true }), { status: 200 }); // quietly ignore
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
     if (_ts) {
       const age = Date.now() - Number(_ts);
       if (!Number.isFinite(age) || age < 3000) {
-        return new Response(JSON.stringify({ ok: true }), { status: 200 }); // too fast → likely bot
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
       }
     }
 
-    // Local/dev fallback
     if (!resend || !CONTACT_TO) {
       console.log("[contact:dev]", { clientAddress, name, email, message });
       return new Response(JSON.stringify({ ok: true, dev: true }), { status: 200 });
@@ -81,7 +78,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       from: CONTACT_FROM,
       to: CONTACT_TO,
       subject,
-      reply_to: email,
+      replyTo: email,
       html: html({ name, email, message }),
     });
 
