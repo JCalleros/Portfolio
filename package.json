@@ -21,7 +21,10 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@astrojs/node": "^9.4.3",
     "@astrojs/vercel": "^8.2.7",
-    "@playwright/test": "^1.55.0"
+    "@playwright/test": "^1.55.0",
+    "http-server": "^14.1.1",
+    "wait-on": "^8.0.4"
   }
 }

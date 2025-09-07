@@ -1,10 +1,7 @@
 ---
-/* Drop this once (after <Nav />). Adds reveal, tilt, scroll-spy, THEME + PARALLAX. */
 ---
 <script>
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  /* ---------- Reveal on view ---------- */
   if (!reduce) {
     const els = document.querySelectorAll("[data-reveal]");
     const io = new IntersectionObserver((entries) => {
@@ -17,7 +14,6 @@
     document.querySelectorAll("[data-reveal]").forEach(el => el.classList.add("in-view"));
   }
 
-  /* ---------- Tilt ---------- */
   if (!reduce) {
     const maxDeg = 6, clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
     document.querySelectorAll("[data-tilt]").forEach((card) => {
@@ -36,7 +32,6 @@
     });
   }
 
-  /* ---------- Scroll-spy (nav highlight) ---------- */
   const links = [...document.querySelectorAll('a.nav-link[href^="#"]')];
   const targets = links.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
   if (targets.length) {
@@ -49,14 +44,11 @@
     targets.forEach(t => spy.observe(t));
   }
 
-  /* ---------- Background THEME per section ---------- */
   const themedSections = document.querySelectorAll("[data-bg]");
   const setTheme = (val) => document.body.setAttribute("data-theme", val || "hero");
   if (themedSections.length) {
-    // initial
     const first = themedSections[0].getAttribute("data-bg");
     setTheme(first);
-    // observer
     const themeObs = new IntersectionObserver((entries) => {
       const top = entries.filter(e => e.isIntersecting).sort((a,b)=> b.intersectionRatio - a.intersectionRatio)[0];
       if (!top) return;
@@ -66,17 +58,16 @@
     themedSections.forEach(s => themeObs.observe(s));
   }
 
-  /* ---------- Parallax shimmer (CSS vars) ---------- */
   if (!reduce) {
     let raf = 0, lastX = 0.5;
     const update = () => {
-      const maxY = 30; // px
-      const maxX = 20; // px
+      const maxY = 30;
+      const maxX = 20;
       const doc = document.documentElement;
       const max = doc.scrollHeight - innerHeight || 1;
       const p = Math.max(0, Math.min(1, scrollY / max));
-      const y = (p - 0.5) * 2 * maxY;       // -maxY .. +maxY
-      const x = (lastX - 0.5) * 2 * maxX;   // pointer-based
+      const y = (p - 0.5) * 2 * maxY;
+      const x = (lastX - 0.5) * 2 * maxX;
       document.body.style.setProperty("--bg-shift-y", y.toFixed(2) + "px");
       document.body.style.setProperty("--bg-shift-x", x.toFixed(2) + "px");
       raf = 0;

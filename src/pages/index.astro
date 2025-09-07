@@ -13,11 +13,12 @@ import projects from "../data/projects";
 import experience from "../data/experience";
 import achievements from "../data/achievements";
 
-const featured = projects.slice(0, 6);
+
+const MAX_PROJECTS = 3
+const featured = projects.slice(0, MAX_PROJECTS);
 
 ---
 <Base>
-  <a id="top"></a>
   <Nav />
   <ScrollProgress />
   <FX />
@@ -55,7 +56,6 @@ const featured = projects.slice(0, 6);
       </div>
       <div class="flex items-center gap-2">
         <a href="/projects" class="btn btn-ghost">View all →</a>
-        <button type="button" class="btn btn-ghost js-open-all" aria-label="Quick view all">Quick view</button>
       </div>
     </header>
 
@@ -82,7 +82,7 @@ const featured = projects.slice(0, 6);
     <SkillsShowcase />
   </section>
 
-  <!-- NEW: ACHIEVEMENTS STRIP -->
+  <!-- ACHIEVEMENTS STRIP -->
   <AchievementsStrip items={achievements} />
 
   <!-- CONTACT -->
