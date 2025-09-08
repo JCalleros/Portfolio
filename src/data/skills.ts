@@ -24,7 +24,6 @@ export const groups: { title: string; items: Item[] }[] = [
     title: "Languages",
     items: [
       { label: "Python", icon: "🐍" },
-      { label: "TypeScript", icon: "🔷" },
       { label: "JavaScript", icon: "🟨" },
       { label: "SQL", icon: "🧾" },
     ],
@@ -34,6 +33,7 @@ export const groups: { title: string; items: Item[] }[] = [
     items: [
       { label: "Django", icon: "🧩" },
       { label: "Django REST", icon: "🛰️" },
+      { label: "React", icon: "⚛️" },
       { label: "Next.js", icon: "⏭️" },
       { label: "Tailwind", icon: "💨" },
     ],
