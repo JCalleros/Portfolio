@@ -13,7 +13,7 @@ test.describe('/ (SkillsShowcase)', () => {
     await expect(section.locator('.skill-orbit')).toBeVisible();
     await expect(section.locator('.skill-orbit .center-label')).toHaveText('Full-Stack');
     const nodeCount = await section.locator('.skill-orbit .node').count();
-    expect(nodeCount).toBe(11);
+    expect(nodeCount).toBe(10);
     await expect(section.locator('.skill-orbit .node').first()).toHaveAttribute('aria-label', /.+/);
   });
 
