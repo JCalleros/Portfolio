@@ -5,7 +5,7 @@ import ScrollProgress from "../../components/ScrollProgress.astro";
 import FX from "../../components/FX.astro";
 import projects from "../../data/projects";
 
-export const prerender = false; // server render so new slugs work immediately
+export const prerender = false;
 
 type Metric = { label: string; value: string };
 type Linkset = { demo?: string; repo?: string; docs?: string };
@@ -16,21 +16,21 @@ type Project = {
   slug?: string;
   title: string;
   summary: string;
-  image: string;           // hero
-  gallery?: string[];      // extra screenshots
+  image: string;
+  gallery?: string[];
   tags?: string[];
   links?: Linkset;
   metrics?: Metric[];
-  body?: string[];         // legacy write-up
-  sections?: Section[];    // richer write-up (preferred)
-  overview?: Overview;     // Problem / Solution / Outcome
+  body?: string[];
+  sections?: Section[];
+  overview?: Overview;
   meta?: { role?: string; year?: string; team?: string; duration?: string };
 };
 
 const toSlug = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-// normalize
+
 const list = (projects as Project[]).map((p) => ({
   ...p,
   slug: p.slug ?? toSlug(p.title),
@@ -67,7 +67,6 @@ if (is404) Astro.response.status = 404;
     </section>
   ) : (
     <>
-      <!-- HERO -->
       <section class="section" data-bg="projects">
         <div class="reveal" data-reveal>
           <nav class="text-sm opacity-80">
@@ -86,21 +85,17 @@ if (is404) Astro.response.status = 404;
             <div class="flex flex-wrap gap-3">
               {proj!.links?.demo && <a class="btn btn-primary" href={proj!.links.demo} target="_blank" rel="noopener">Live demo</a>}
               {proj!.links?.repo && <a class="btn btn-ghost" href={proj!.links.repo} target="_blank" rel="noopener">Source code</a>}
-              <button class="btn btn-ghost" id="copy-link">Copy link</button>
             </div>
           </div>
         </div>
 
-        <!-- Media: hero + carousel -->
         <div class="reveal mt-8" data-reveal>
           <div class="card overflow-hidden">
             <div class="grid gap-0 lg:grid-cols-[1.6fr_1fr]">
-              <!-- main media frame -->
               <figure class="relative aspect-[16/10] bg-white/5 media-frame">
                 <img id="main-media" src={proj!.image} alt={`${proj!.title} screenshot`} class="absolute inset-0 h-full w-full object-contain p-3" loading="eager" decoding="async" />
               </figure>
 
-              <!-- thumb rail -->
               <div class="p-3 lg:p-4">
                 <div id="thumbs" class="scrollbar-none grid grid-flow-col auto-cols-[9rem] gap-3 overflow-x-auto lg:grid-flow-row lg:auto-rows-[5.25rem] lg:overflow-x-visible lg:overflow-y-auto">
                   <button class="thumb is-active" data-src={proj!.image} aria-label="Main image">
@@ -112,17 +107,15 @@ if (is404) Astro.response.status = 404;
                     </button>
                   ))}
                 </div>
-                <p class="mt-3 text-xs opacity-70">Scroll or drag the thumbnails • Click to preview</p>
+                <p class="mt-3 text-xs opacity-70">Click a thumbnail to preview</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- QUICK FACTS + WRITE-UP -->
       <section class="section">
         <div class="grid gap-8 lg:grid-cols-[1fr_1.25fr] items-start">
-          <!-- Sticky facts -->
           <aside class="reveal space-y-4 lg:sticky lg:top-24" data-reveal>
             <div class="card p-5">
               <h2 class="text-lg font-semibold">Quick facts</h2>
@@ -148,9 +141,7 @@ if (is404) Astro.response.status = 404;
             )}
           </aside>
 
-          <!-- Case study body -->
           <div class="space-y-8">
-            <!-- Overview trio -->
             {(proj!.overview?.problem || proj!.overview?.solution || proj!.overview?.outcome) && (
               <div class="reveal grid gap-4 md:grid-cols-3" data-reveal>
                 {proj!.overview?.problem && (
@@ -174,7 +165,6 @@ if (is404) Astro.response.status = 404;
               </div>
             )}
 
-            <!-- Sections (preferred) -->
             {(proj!.sections?.length ?? 0) > 0 ? (
               proj!.sections!.map((s) => (
                 <section class="reveal card p-6 space-y-3 text-sm/7 opacity-90" data-reveal>
@@ -183,7 +173,6 @@ if (is404) Astro.response.status = 404;
                 </section>
               ))
             ) : (
-              <!-- Legacy body array -->
               <article class="reveal card p-6 space-y-4 text-sm/7 opacity-90" data-reveal>
                 {(proj!.body?.length ?? 0) > 0 ? proj!.body!.map((p) => <p>{p}</p>) : <p>Detailed write-up coming soon.</p>}
               </article>
@@ -192,7 +181,6 @@ if (is404) Astro.response.status = 404;
         </div>
       </section>
 
-      <!-- NEXT / PREV -->
       {(prev || next) && (
         <section class="section pt-0">
           <div class="reveal grid gap-4 sm:grid-cols-2" data-reveal>
@@ -214,7 +202,6 @@ if (is404) Astro.response.status = 404;
         </section>
       )}
 
-      <!-- CTA -->
       <section class="section">
         <div class="reveal card p-6 flex flex-wrap items-center justify-between gap-4" data-reveal>
           <div>
@@ -227,19 +214,7 @@ if (is404) Astro.response.status = 404;
     </>
   )}
 
-  <!-- Page JS: thumbs + copy link (no frameworks) -->
   <script>
-    // Copy URL
-    const copyBtn = document.getElementById("copy-link");
-    copyBtn?.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(location.href);
-        copyBtn.textContent = "Link copied!";
-        setTimeout(() => (copyBtn.textContent = "Copy link"), 1800);
-      } catch {}
-    });
-
-    // Thumbnails → swap main image
     const main = document.getElementById("main-media");
     const rail = document.getElementById("thumbs");
     if (main && rail) {
@@ -267,7 +242,6 @@ if (is404) Astro.response.status = 404;
     .thumb:hover { transform: translateY(-2px); background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.2); }
     .thumb.is-active { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
-    /* Hide scrollbar for horizontal thumb rail on small screens */
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
