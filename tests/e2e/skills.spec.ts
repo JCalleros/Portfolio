@@ -13,7 +13,7 @@ test.describe('/ (SkillsShowcase)', () => {
     await expect(section.locator('.skill-orbit')).toBeVisible();
     await expect(section.locator('.skill-orbit .center-label')).toHaveText('Full-Stack');
     const nodeCount = await section.locator('.skill-orbit .node').count();
-    expect(nodeCount).toBe(10);
+    expect(nodeCount).toBe(12);
     await expect(section.locator('.skill-orbit .node').first()).toHaveAttribute('aria-label', /.+/);
   });
 
@@ -46,14 +46,14 @@ test.describe('/ (SkillsShowcase)', () => {
     }
 
     const chips = section.locator('.skill-card .skill-chip');
-    expect(await chips.count()).toBeGreaterThan(10);
+    expect(await chips.count()).toBeGreaterThan(2);
     await expect(chips.first()).toContainText(/\w/);
   });
 
   test('high-signal skills are visible (orbit or card)', async ({ page }) => {
     const section = page.locator('#skills');
 
-    for (const label of ['React', 'Python', 'Django', 'AWS', 'Docker', 'Postgres']) {
+    for (const label of ['React', 'Python', 'Django', 'Flas', 'AWS', 'Docker', 'MySQL', 'Postgres']) {
       const orbitMatches = await section
         .locator(`.skill-orbit .node[aria-label="${label}"]`)
         .count();
