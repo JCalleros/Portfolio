@@ -1,39 +1,38 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const BASE = process.env.BASE_URL || 'http://localhost:4321';
+const IS_CI = !!process.env.CI;
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:4321';
 
 export default defineConfig({
-  testDir: 'tests/e2e',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 3 : undefined,
-
-  reporter: process.env.CI ? [['html', { open: 'never' }], ['line']] : [['list']],
-
+  testDir: './tests/e2e',
+  timeout: IS_CI ? 60_000 : 30_000,
+  expect: { timeout: IS_CI ? 10_000 : 5_000 },
+  retries: IS_CI ? 2 : 0,
+  workers: IS_CI ? 3 : undefined,
+  forbidOnly: IS_CI,
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+  ],
   use: {
     baseURL: BASE,
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    colorScheme: 'dark',
-    reducedMotion: 'reduce',
+    actionTimeout: IS_CI ? 15_000 : 0,
+    navigationTimeout: IS_CI ? 30_000 : 15_000,
     viewport: { width: 1280, height: 800 },
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
   },
 
-  // Start a server automatically unless you run your own.
-  // Uses your production build (fast & matches Vercel).
-  webServer: process.env.PLAYWRIGHT_NO_WEB_SERVER ? undefined : {
-    command: 'npm run preview:test',      // builds + serves dist at 4321
-    url: BASE,
-    timeout: 120_000,
-    reuseExistingServer: true,
-  },
-
-  // Cross-browser projects (Chromium/Firefox/WebKit)
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit',   use: { ...devices['Desktop Safari'] } },
+    {
+      name: 'webkit',
+      use: {
+        ...devices['Desktop Safari'],
+        launchOptions: { slowMo: IS_CI ? 50 : 0 },
+      },
+    },
   ],
 });
