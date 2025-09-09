@@ -17,46 +17,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    # This image ships with Playwright 1.55.0 + browsers preinstalled
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-jammy
+      options: --ipc=host
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
+      - name: Show Node & npm in container
+        run: node -v && npm -v
 
       - name: Install deps
         run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
 
       - name: Build (Node adapter only in CI)
         env:
           ASTRO_PREVIEW: "1"
         run: npm run build
 
-      - name: Start preview server
-        id: preview
-        env:
-          ASTRO_PREVIEW: "1"
-        run: |
-          nohup npx astro preview --port 4321 --host 127.0.0.1 > /tmp/astro.log 2>&1 &
-          echo $! > /tmp/astro.pid
-          # wait up to ~60s for 200 OK
-          for i in {1..60}; do
-            if curl -sSf http://127.0.0.1:4321/ > /dev/null; then
-              echo "Preview is up"; break
-            fi
-            sleep 1
-          done
-          # show a bit of the log (handy when debugging)
-          tail -n +1 /tmp/astro.log | sed -e 's/^/[preview] /'
-
       - name: Run Playwright tests
         env:
+          ASTRO_PREVIEW: "1"
           BASE_URL: http://127.0.0.1:4321
         run: npx playwright test
 
@@ -75,11 +58,3 @@ jobs:
           name: playwright-traces
           path: test-results
           retention-days: 7
-
-      - name: Stop preview server
-        if: always()
-        run: |
-          if [ -f /tmp/astro.pid ]; then
-            kill $(cat /tmp/astro.pid) || true
-          fi
-          sleep 1
