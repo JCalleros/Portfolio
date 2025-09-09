@@ -4,7 +4,7 @@ const BASE = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4321';
 
 test.describe('/ (SkillsShowcase)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/#skills`);
+    await page.goto(`${BASE}/#skills`, { waitUntil: 'domcontentloaded' });
   });
 
   test('renders section title and orbit', async ({ page }) => {

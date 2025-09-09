@@ -4,7 +4,7 @@ const BASE = process.env.BASE_URL || 'http://localhost:4321';
 
 test.describe('Landing page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/`);
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
   });
 
   test('has title and hero CTAs', async ({ page }) => {

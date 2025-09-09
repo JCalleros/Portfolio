@@ -4,7 +4,7 @@ const BASE = process.env.BASE_URL || 'http://localhost:4321';
 
 test.describe('/ (ExperienceTimeline)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/`);
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
     const section = page.locator('#experience');
     await section.scrollIntoViewIfNeeded();
     await expect(section).toBeVisible();
