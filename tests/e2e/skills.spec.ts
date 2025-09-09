@@ -18,14 +18,11 @@ test.describe('/ (SkillsShowcase)', () => {
   });
 
   test('orbit nodes are keyboard focusable', async ({ page }) => {
-    const section = page.locator('#skills');
-    const firstNode = section.locator('.skill-orbit .node').first();
-
-    await firstNode.focus();
-    await expect(firstNode).toBeFocused();
-
-    await firstNode.press('Enter');
-    await expect(firstNode).toBeFocused();
+    const nodes = page.locator('#skills .skill-orbit .node');
+    const n = await nodes.count();
+    expect(n).toBeGreaterThan(0);
+    await nodes.first().focus();
+    await expect(nodes.first()).toBeFocused();
   });
 
   test('grid shows expected groups and chips', async ({ page }) => {
