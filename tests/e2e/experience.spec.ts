@@ -1,14 +1,17 @@
 import { test, expect } from '@playwright/test';
+import { disableAnimations, bringIntoView, waitInViewport } from './utils';
 
 const BASE = process.env.BASE_URL || 'http://localhost:4321';
 
 test.describe('/ (ExperienceTimeline)', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, browserName }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await disableAnimations(page);
     const section = page.locator('#experience');
-    await section.scrollIntoViewIfNeeded();
+    await bringIntoView(page, section, browserName);
     await expect(section).toBeVisible();
-    await page.waitForSelector('#experience .timeline .timeline-item');
+    // Ensure visible, not just attached
+    await page.locator('#experience .timeline .timeline-item').first().waitFor({ state: 'visible' });
   });
 
   test('renders entries with heading, date range and bullets', async ({ page }) => {

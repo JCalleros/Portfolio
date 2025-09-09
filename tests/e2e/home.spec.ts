@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { disableAnimations } from './utils';
 
 const BASE = process.env.BASE_URL || 'http://localhost:4321';
 
 test.describe('Landing page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await disableAnimations(page);
   });
 
   test('has title and hero CTAs', async ({ page }) => {
