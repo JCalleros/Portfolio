@@ -6,11 +6,14 @@ const experience = [
     range: "Mar 2019 — Jun 2023",
     tags: ["Python", "Django", "REST APIs", "Automation", "Docker", "Postgres"],
     points: [
-      "Built automation frameworks and web UIs that streamlined Smart TV testing across multiple R&D teams.",
-      "Developed APIs and tools to configure TV test environments and DUMP analysis workflows.",
-      "Integrated HQ services to unify reporting; processed 8k+ daily issue records to accelerate triage & resolution.",
-      "Created dashboards and alerts for failures/regressions; improved signal-to-noise for on-call engineers.",
-      "Containerized dev environments (Docker) to ensure reproducible local setups and quick onboarding."
+      "Automated Smart TV testing, speeding troubleshooting and cutting manual work across 3+ global R&D teams.",
+      "Built web UI/APIs to automate TV environment setup (debugger config, DUMP analysis).",
+      "Collaborated with devs/leads to ship features and tailor systems, pages, and APIs for productivity.",
+      "Integrated HQ services into the issues-analysis platform (env repo, ticketing, owner DB) to handle 8k+ daily \
+        records and resolve issues faster.",
+      "Cut system-reported issues by 60% via refactors, unit tests, and code reviews.",
+      "Administered 4+ on-prem Ubuntu servers for reliable, high-performance systems/APIs.",
+      "Migrated legacy systems to AWS; deployed 2+ EC2 with EFS/S3/CloudFormation and hardened security groups."
     ],
   },
   {
@@ -20,9 +23,8 @@ const experience = [
     range: "Sep 2018 — Jan 2019",
     tags: ["Java", "Spring Boot", "IBM BPM", "Automation", "i18n"],
     points: [
-      "Implemented automation scripts for IBM BPM; removed repetitive steps from the sales workflow.",
-      "Added internationalization to an enterprise Spring Boot project (2+ languages) with locale-aware validation.",
-      "Wrote deployment and health-check scripts that reduced release pain and improved reliability."
+      "Improved IBM BPM automation scripts, streamlining telecom sales workflows.",
+      "Added i18n to a Spring Boot app, enabling 2+ languages for global clients.",
     ],
   },
 ];

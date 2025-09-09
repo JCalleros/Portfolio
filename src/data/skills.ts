@@ -7,9 +7,11 @@ export const ringA: Item[] = [
   { label: "React", icon: "⚛️" },
   { label: "Python", icon: "🐍" },
   { label: "Django", icon: "🧩" },
+  { label: "Flask", icon: "🧪" },
   { label: "AWS", icon: "☁️" },
   { label: "Docker", icon: "🐳" },
   { label: "Postgres", icon: "🐘" },
+  { label: "MySQL", icon: "🐬" },
 ];
 
 export const ringB: Item[] = [
@@ -33,6 +35,7 @@ export const groups: { title: string; items: Item[] }[] = [
     items: [
       { label: "Django", icon: "🧩" },
       { label: "Django REST", icon: "🛰️" },
+      { label: "Flask", icon: "🧪" },
       { label: "React", icon: "⚛️" },
       { label: "Next.js", icon: "⏭️" },
       { label: "Tailwind", icon: "💨" },
@@ -49,6 +52,7 @@ export const groups: { title: string; items: Item[] }[] = [
   {
     title: "Data",
     items: [
+      { label: "MySQL", icon: "🐬" },
       { label: "Postgres", icon: "🐘" },
       { label: "Redis", icon: "🧠" },
     ],
