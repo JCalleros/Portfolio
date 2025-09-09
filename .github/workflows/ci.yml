@@ -17,34 +17,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
-    # Use Playwright 1.55.0 with browsers preinstalled
+    # Browsers preinstalled for your pinned Playwright 1.55.0
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-jammy
-      # Run as non-root so $HOME ownership matches (fixes Firefox launch)
-      options: --ipc=host --user pwuser
+      options: --ipc=host   # run as root (default) so checkout can write
 
-    # Ensure processes see the right home dir
     env:
-      HOME: /home/pwuser
       CI: 'true'
       BASE_URL: http://127.0.0.1:4321
+      HOME: /root            # <-- fixes Firefox launch under root
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Node/npm are already in the container; just install with your lockfile
       - name: Install deps
         run: npm ci
 
-      # Build once; Playwright will run "astro preview" from playwright.config.ts
       - name: Build (production)
         run: npm run build
 
+      # Playwright will start the server via your playwright.config.ts webServer
       - name: Run Playwright tests
         run: npx playwright test
 
-      # Helpful artifacts for debugging
       - name: Upload Playwright HTML report (always)
         if: always()
         uses: actions/upload-artifact@v4
