@@ -15,35 +15,37 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
-    # This image ships with Playwright 1.55.0 + browsers preinstalled
+    # Use Playwright 1.55.0 with browsers preinstalled
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-jammy
-      options: --ipc=host
+      # Run as non-root so $HOME ownership matches (fixes Firefox launch)
+      options: --ipc=host --user pwuser
+
+    # Ensure processes see the right home dir
+    env:
+      HOME: /home/pwuser
+      CI: 'true'
+      BASE_URL: http://127.0.0.1:4321
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show Node & npm in container
-        run: node -v && npm -v
-
+      # Node/npm are already in the container; just install with your lockfile
       - name: Install deps
         run: npm ci
 
-      - name: Build (Node adapter only in CI)
-        env:
-          ASTRO_PREVIEW: "1"
+      # Build once; Playwright will run "astro preview" from playwright.config.ts
+      - name: Build (production)
         run: npm run build
 
       - name: Run Playwright tests
-        env:
-          ASTRO_PREVIEW: "1"
-          BASE_URL: http://127.0.0.1:4321
         run: npx playwright test
 
-      - name: Upload HTML report (always)
+      # Helpful artifacts for debugging
+      - name: Upload Playwright HTML report (always)
         if: always()
         uses: actions/upload-artifact@v4
         with:
